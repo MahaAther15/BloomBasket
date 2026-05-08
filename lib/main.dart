@@ -53,6 +53,8 @@ class BloomBasketApp extends StatelessWidget {
       child: MaterialApp.router(
         title: 'BloomBasket',
         theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.neonTheme,
+        themeMode: ThemeMode.dark, // Force Dark Neon Mode as requested
         routerConfig: router,
         debugShowCheckedModeBanner: false,
       ),

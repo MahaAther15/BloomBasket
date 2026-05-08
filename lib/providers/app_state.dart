@@ -762,6 +762,40 @@ class AppState extends ChangeNotifier {
     ];
   }
 
+  // ==================== ADMIN METHODS ====================
+  void addProduct(Product product) {
+    _products.insert(0, product);
+    notifyListeners();
+  }
+
+  void deleteProduct(String productId) {
+    _products.removeWhere((p) => p.id == productId);
+    notifyListeners();
+  }
+
+  void updateOrderStatus(String orderId, OrderStatus status) {
+    final index = _orders.indexWhere((o) => o.id == orderId);
+    if (index != -1) {
+      _orders[index] = _orders[index].copyWith(status: status);
+      
+      // Update in local storage if user is logged in
+      if (_user != null) {
+         _updateUserLocalData({
+          'orders': _orders
+              .map((order) => {
+                    'id': order.id,
+                    'totalAmount': order.totalAmount,
+                    'orderDate': order.orderDate.toIso8601String(),
+                    'status': order.status.toString(),
+                    'deliveryAddress': order.deliveryAddress,
+                  })
+              .toList(),
+        });
+      }
+      notifyListeners();
+    }
+  }
+
   // ==================== CART METHODS ====================
   void addToCart(Product product) {
     final index = _cart.indexWhere((i) => i.product.id == product.id);

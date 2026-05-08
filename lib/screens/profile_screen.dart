@@ -231,6 +231,24 @@ class ProfileScreen extends StatelessWidget {
 
                   const SizedBox(height: 32),
 
+                  // --- ADMIN SECTION ---
+                  _buildSectionHeader('ADMINISTRATION', 'DASHBOARD'),
+                  const SizedBox(height: 12),
+                  ElevatedButton.icon(
+                    onPressed: () => context.push('/admin'),
+                    icon: const Icon(Icons.admin_panel_settings),
+                    label: const Text('GO TO NEON ADMIN PANEL'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black,
+                      foregroundColor: const Color(0xFF00FFFF),
+                      minimumSize: const Size(double.infinity, 54),
+                      side: const BorderSide(color: Color(0xFF00FFFF), width: 1),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+
+                  const SizedBox(height: 32),
+
                   // --- ORDERS SECTION ---
                   _buildSectionHeader(
                       'ORDER HISTORY', appState.orders.length.toString()),
