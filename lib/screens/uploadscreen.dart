@@ -6,6 +6,7 @@ import 'dart:io';
 import '../providers/app_state.dart';
 import '../models/product.dart';
 import 'admin_dashboard_screen.dart';
+import '../app_theme.dart';
 
 class UploadScreen extends StatefulWidget {
   const UploadScreen({super.key});
@@ -81,7 +82,7 @@ class _UploadScreenState extends State<UploadScreen> with SingleTickerProviderSt
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('PRODUCT ADDED SUCCESSFULLY!'),
-            backgroundColor: AdminDashboardScreen.pastelMint,
+            backgroundColor: AppTheme.pastelMint,
           ),
         );
 
@@ -98,11 +99,11 @@ class _UploadScreenState extends State<UploadScreen> with SingleTickerProviderSt
         title: Text(
           'ADD NEW PRODUCT',
           style: TextStyle(
-            color: AdminDashboardScreen.textColor,
+            color: Colors.white,
             fontWeight: FontWeight.bold,
             letterSpacing: 1.2,
             shadows: [
-              Shadow(color: AdminDashboardScreen.pastelLavender.withOpacity(0.45), blurRadius: 6),
+              Shadow(color: AppTheme.pastelLavender.withOpacity(0.45), blurRadius: 6),
             ],
           ),
         ),
@@ -149,14 +150,14 @@ class _UploadScreenState extends State<UploadScreen> with SingleTickerProviderSt
                     controller: _nameController,
                     label: 'FLOWER NAME',
                     icon: Icons.local_florist,
-                    color: AdminDashboardScreen.pastelPink,
+                    color: AppTheme.pastelPink,
                   ),
                   const SizedBox(height: 20),
                   _buildNeonTextField(
                     controller: _descController,
                     label: 'DESCRIPTION',
                     icon: Icons.description,
-                    color: AdminDashboardScreen.pastelPeach,
+                    color: AppTheme.pastelPeach,
                     maxLines: 3,
                   ),
                   const SizedBox(height: 20),
@@ -167,7 +168,7 @@ class _UploadScreenState extends State<UploadScreen> with SingleTickerProviderSt
                           controller: _priceController,
                           label: 'PRICE (\$)',
                           icon: Icons.attach_money,
-                          color: AdminDashboardScreen.pastelMint,
+                          color: AppTheme.pastelMint,
                           keyboardType: TextInputType.number,
                         ),
                       ),
@@ -177,7 +178,7 @@ class _UploadScreenState extends State<UploadScreen> with SingleTickerProviderSt
                           controller: _categoryController,
                           label: 'CATEGORY',
                           icon: Icons.category,
-                          color: AdminDashboardScreen.pastelPink,
+                          color: AppTheme.pastelPink,
                         ),
                       ),
                     ],
@@ -221,10 +222,10 @@ class _UploadScreenState extends State<UploadScreen> with SingleTickerProviderSt
           decoration: BoxDecoration(
           color: Colors.white.withOpacity(0.6),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AdminDashboardScreen.pastelLavender.withOpacity(0.5), width: 2),
+          border: Border.all(color: AppTheme.pastelLavender.withOpacity(0.5), width: 2),
           boxShadow: [
             BoxShadow(
-              color: AdminDashboardScreen.pastelLavender.withOpacity(0.08),
+              color: AppTheme.pastelLavender.withOpacity(0.08),
               blurRadius: 10,
             ),
           ],
@@ -237,11 +238,11 @@ class _UploadScreenState extends State<UploadScreen> with SingleTickerProviderSt
             : Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.camera_alt, color: AdminDashboardScreen.pastelLavender, size: 40),
+                  Icon(Icons.camera_alt, color: AppTheme.pastelLavender, size: 40),
                   const SizedBox(height: 10),
                   Text(
                     'TAP TO ADD PICTURE',
-                    style: TextStyle(color: AdminDashboardScreen.textColor, fontWeight: FontWeight.bold),
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -298,11 +299,11 @@ class _UploadScreenState extends State<UploadScreen> with SingleTickerProviderSt
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(30),
           gradient: LinearGradient(
-            colors: [AdminDashboardScreen.pastelLavender, AdminDashboardScreen.pastelPink],
+            colors: [AppTheme.pastelLavender, AppTheme.pastelPink],
           ),
           boxShadow: [
             BoxShadow(
-              color: AdminDashboardScreen.pastelLavender.withOpacity(0.12),
+              color: AppTheme.pastelLavender.withOpacity(0.12),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),

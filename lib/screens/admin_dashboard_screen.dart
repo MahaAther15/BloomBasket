@@ -640,6 +640,24 @@ class _OrderNeonCardState extends State<_OrderNeonCard>
                           ),
                         ],
                       ),
+                    ),
+                    Text(
+                      '\$${widget.order.totalAmount.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              _StatusDropdown(order: widget.order),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
 
 class _StatusDropdown extends StatelessWidget {
   final BBOrder order;
