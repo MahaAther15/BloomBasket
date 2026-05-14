@@ -43,10 +43,10 @@ class _CustomizeGiftScreenState extends State<CustomizeGiftScreen> {
               decoration: InputDecoration(
                 hintText: 'WRITE YOUR MESSAGE HERE...',
                 hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppTheme.outline.withValues(alpha: 0.4),
+                      color: AppTheme.outline.withOpacity(0.4),
                     ),
                 enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: AppTheme.outline.withValues(alpha: 0.2)),
+                  borderSide: BorderSide(color: AppTheme.outline.withOpacity(0.2)),
                 ),
                 focusedBorder: const OutlineInputBorder(
                   borderSide: BorderSide(color: AppTheme.primaryGreen),
@@ -149,7 +149,7 @@ class _OptionChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: isActive ? AppTheme.primaryGreen : Colors.white,
           border: Border.all(
-            color: isActive ? AppTheme.primaryGreen : AppTheme.outline.withValues(alpha: 0.2),
+            color: isActive ? AppTheme.primaryGreen : AppTheme.outline.withOpacity(0.2),
           ),
           borderRadius: BorderRadius.circular(4),
         ),

@@ -1,12 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import '../app_theme.dart';
 import '../providers/app_state.dart';
 import 'home_screen.dart';
 import '../widgets/primary_button.dart';
 import '../widgets/ghost_button.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
+// ─── Shared Palette (Matching Your App) ──────────────────────────────────────
+const _kPurple = Color(0xFF7457A2);
+const _kPurpleLight = Color(0xFFEDE7F6);
+const _kPurpleSoft = Color(0xFFF3EEFE);
+const _kBg = Color(0xFFFAF8FF);
+const _kWhite = Colors.white;
+const _kText = Color(0xFF2D1B4E);
+const _kTextSub = Color(0xFF8E7BAE);
+const _kGold = Color(0xFFF7C948);
+const _kGreen = Color(0xFF4CAF50);
+const _kRed = Color(0xFFE57373);
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -26,13 +37,13 @@ class _SignInScreenState extends State<SignInScreen>
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
   late Animation<double> _scaleAnimation;
-  late Animation<double> _logoRotationAnimation;
+  late Animation<double> _logoScaleAnimation;
 
   @override
   void initState() {
     super.initState();
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 1200),
       vsync: this,
     );
 
@@ -41,18 +52,18 @@ class _SignInScreenState extends State<SignInScreen>
     );
 
     _slideAnimation =
-        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+        Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(
       CurvedAnimation(
         parent: _animationController,
         curve: Curves.easeOutCubic,
       ),
     );
 
-    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+    _scaleAnimation = Tween<double>(begin: 0.95, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeOutBack),
     );
 
-    _logoRotationAnimation = Tween<double>(begin: 0, end: 1).animate(
+    _logoScaleAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
       CurvedAnimation(
         parent: _animationController,
         curve: Curves.elasticOut,
@@ -76,24 +87,49 @@ class _SignInScreenState extends State<SignInScreen>
     final isSmallScreen = screenSize.width < 600;
 
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              AppTheme.alabaster,
-              AppTheme.pinkContainer.withOpacity(0.3),
-            ],
-          ),
-        ),
+      backgroundColor: _kBg,
+      body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 20 : 32),
+          padding: EdgeInsets.symmetric(
+            horizontal: isSmallScreen ? 20 : 32,
+            vertical: 24,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(height: isSmallScreen ? 60 : 80),
+              // Back Button with Animation
+              TweenAnimationBuilder(
+                tween: Tween<double>(begin: -20, end: 0),
+                duration: const Duration(milliseconds: 400),
+                builder: (context, double value, child) {
+                  return Transform.translate(
+                    offset: Offset(value, 0),
+                    child: child,
+                  );
+                },
+                child: IconButton(
+                  onPressed: () => context.go('/'),
+                  icon: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: _kWhite,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: _kPurple.withOpacity(0.1),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child:
+                        const Icon(Icons.arrow_back, color: _kPurple, size: 20),
+                  ),
+                  padding: EdgeInsets.zero,
+                ),
+              ),
+              const SizedBox(height: 40),
 
               // Animated Logo/Header
               FadeTransition(
@@ -103,83 +139,57 @@ class _SignInScreenState extends State<SignInScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Animated Logo with rotation
-                      TweenAnimationBuilder(
-                        tween: Tween<double>(begin: 0, end: 1),
-                        duration: const Duration(milliseconds: 1000),
-                        builder: (context, double value, child) {
-                          return Transform.scale(
-                            scale: value,
-                            child: Transform.rotate(
-                              angle: _logoRotationAnimation.value * 0.5,
-                              child: Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      AppTheme.primaryGreen,
-                                      AppTheme.primaryContainer,
-                                    ],
-                                  ),
-                                  borderRadius: BorderRadius.circular(16),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: AppTheme.primaryGreen
-                                          .withOpacity(0.3),
-                                      blurRadius: 20,
-                                      offset: const Offset(0, 8),
-                                    ),
-                                  ],
-                                ),
-                                child: AnimatedIcon(
-                                  icon: AnimatedIcons.menu_arrow,
-                                  progress: _animationController,
-                                  color: AppTheme.alabaster,
-                                  size: 40,
-                                ),
-                              ),
+                      // Animated Logo
+                      ScaleTransition(
+                        scale: _logoScaleAnimation,
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [_kPurple, _kPurple.withOpacity(0.7)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
                             ),
-                          );
-                        },
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: _kPurple.withOpacity(0.3),
+                                blurRadius: 20,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.local_florist,
+                            color: _kWhite,
+                            size: 48,
+                          ),
+                        ),
                       ),
-                      const SizedBox(height: 24),
-                      // Animated text with gradient shimmer
+                      const SizedBox(height: 28),
+                      // Animated Title
                       ShaderMask(
                         shaderCallback: (bounds) => LinearGradient(
-                          colors: [
-                            AppTheme.primaryGreen,
-                            AppTheme.richGold,
-                          ],
+                          colors: [_kPurple, _kGold],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ).createShader(bounds),
-                        child: AnimatedDefaultTextStyle(
-                          duration: const Duration(milliseconds: 500),
-                          style: Theme.of(context)
-                              .textTheme
-                              .headlineLarge
-                              ?.copyWith(
-                                fontSize: isSmallScreen ? 36 : 48,
-                                height: 1.1,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ) ?? const TextStyle(),
-                          child: const Text('The Floral\nAtelier'),
+                        child: Text(
+                          'Welcome Back',
+                          style: TextStyle(
+                            fontSize: isSmallScreen ? 32 : 40,
+                            fontWeight: FontWeight.w800,
+                            color: _kWhite,
+                            letterSpacing: -0.5,
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 800),
-                        curve: Curves.easeOut,
-                        child: Text(
-                          'WELCOME BACK TO THE WORLD OF BOTANICAL PRESTIGE.',
-                          style:
-                              Theme.of(context).textTheme.labelLarge?.copyWith(
-                                    color: AppTheme.outline,
-                                    height: 1.5,
-                                    letterSpacing: 1.2,
-                                    fontSize: isSmallScreen ? 10 : 12,
-                                  ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Sign in to continue your floral journey',
+                        style: TextStyle(
+                          fontSize: isSmallScreen ? 13 : 14,
+                          color: _kTextSub,
                         ),
                       ),
                     ],
@@ -187,164 +197,84 @@ class _SignInScreenState extends State<SignInScreen>
                 ),
               ),
 
-              const SizedBox(height: 60),
+              const SizedBox(height: 48),
 
               // Form Fields with staggered animations
               ..._buildAnimatedFormFields(isSmallScreen),
 
-              const SizedBox(height: 40),
+              const SizedBox(height: 32),
 
               // Sign In Button
               FadeTransition(
                 opacity: _fadeAnimation,
-                child: SlideTransition(
-                  position: Tween<Offset>(
-                    begin: const Offset(0, 0.1),
-                    end: Offset.zero,
-                  ).animate(
-                    CurvedAnimation(
-                      parent: _animationController,
-                      curve: const Interval(0.4, 1.0, curve: Curves.easeOut),
-                    ),
-                  ),
-                  child: ScaleTransition(
-                    scale: _scaleAnimation,
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      child: _isLoading
-                          ? const Center(
-                              child: CircularProgressIndicator(
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  AppTheme.primaryGreen,
-                                ),
-                              ),
-                            )
-                          : PrimaryButton(
-                              label: 'Sign In',
-                              onPressed: () => _handleSignIn(),
-                            ),
-                    ),
-                  ),
+                child: ScaleTransition(
+                  scale: _scaleAnimation,
+                  child: _isLoading
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(_kPurple),
+                          ),
+                        )
+                      : PrimaryButton(
+                          label: 'Sign In',
+                          onPressed: () => _handleSignIn(),
+                        ),
                 ),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
 
-              // Divider with animation
+              // OR Divider
               FadeTransition(
                 opacity: _fadeAnimation,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 500),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Divider(
-                          color: AppTheme.outline.withOpacity(0.3),
-                          thickness: 1,
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Text(
-                          'OR',
-                          style:
-                              Theme.of(context).textTheme.labelLarge?.copyWith(
-                                    fontSize: 10,
-                                    color: AppTheme.outline.withOpacity(0.5),
-                                  ),
-                        ),
-                      ),
-                      Expanded(
-                        child: Divider(
-                          color: AppTheme.outline.withOpacity(0.3),
-                          thickness: 1,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                child: _buildDivider(),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
 
               // Google Sign In Button
               FadeTransition(
                 opacity: _fadeAnimation,
-                child: SlideTransition(
-                  position: Tween<Offset>(
-                    begin: const Offset(0, 0.1),
-                    end: Offset.zero,
-                  ).animate(
-                    CurvedAnimation(
-                      parent: _animationController,
-                      curve: const Interval(0.5, 1.0, curve: Curves.easeOut),
-                    ),
-                  ),
-                  child: TweenAnimationBuilder(
-                    tween: Tween<double>(begin: 0.95, end: 1.0),
-                    duration: const Duration(milliseconds: 400),
-                    builder: (context, double value, child) {
-                      return Transform.scale(scale: value, child: child);
-                    },
-                    child: GhostButton(
-                      label: 'Continue with Google',
-                      onPressed: () => _handleGoogleSignIn(),
-                      icon: Icons.g_mobiledata,
-                    ),
-                  ),
+                child: GhostButton(
+                  label: 'Continue with Google',
+                  onPressed: () => _handleGoogleSignIn(),
+                  icon: Icons.g_mobiledata,
                 ),
               ),
 
-              const SizedBox(height: 60),
+              const SizedBox(height: 32),
 
               // Sign Up Link
               FadeTransition(
                 opacity: _fadeAnimation,
-                child: SlideTransition(
-                  position: Tween<Offset>(
-                    begin: const Offset(0, 0.1),
-                    end: Offset.zero,
-                  ).animate(
-                    CurvedAnimation(
-                      parent: _animationController,
-                      curve: const Interval(0.6, 1.0, curve: Curves.easeOut),
-                    ),
-                  ),
-                  child: Center(
-                    child: InkWell(
-                      onTap: () {
-                        _navigateToSignUp();
-                      },
-                      child: AnimatedDefaultTextStyle(
-                        duration: const Duration(milliseconds: 300),
-                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                              fontSize: 10,
-                              color: AppTheme.outline,
-                              letterSpacing: 0.8,
-                            ) ?? const TextStyle(),
-                        child: Text.rich(
-                          TextSpan(
-                            text: "DON'T HAVE AN ACCOUNT? ",
-                            children: [
-                              TextSpan(
-                                text: 'CREATE ONE',
-                                style: TextStyle(
-                                  color: AppTheme.primaryGreen,
-                                  fontWeight: FontWeight.w700,
-                                  decoration: TextDecoration.underline,
-                                  decorationColor: AppTheme.primaryGreen,
-                                ),
-                              ),
-                            ],
-                          ),
+                child: Center(
+                  child: InkWell(
+                    onTap: () => _navigateToSignUp(),
+                    child: RichText(
+                      text: TextSpan(
+                        text: "Don't have an account? ",
+                        style: TextStyle(
+                          color: _kTextSub,
+                          fontSize: isSmallScreen ? 12 : 13,
                         ),
+                        children: [
+                          TextSpan(
+                            text: 'Sign Up',
+                            style: TextStyle(
+                              color: _kPurple,
+                              fontWeight: FontWeight.w700,
+                              decoration: TextDecoration.underline,
+                              decorationColor: _kPurple,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 ),
               ),
 
-              const SizedBox(height: 40),
+              const SizedBox(height: 20),
             ],
           ),
         ),
@@ -358,7 +288,7 @@ class _SignInScreenState extends State<SignInScreen>
         opacity: _fadeAnimation,
         child: SlideTransition(
           position: Tween<Offset>(
-            begin: const Offset(0, 0.2),
+            begin: const Offset(0, 0.15),
             end: Offset.zero,
           ).animate(
             CurvedAnimation(
@@ -369,12 +299,12 @@ class _SignInScreenState extends State<SignInScreen>
           child: _buildEmailField(isSmallScreen),
         ),
       ),
-      const SizedBox(height: 24),
+      const SizedBox(height: 20),
       FadeTransition(
         opacity: _fadeAnimation,
         child: SlideTransition(
           position: Tween<Offset>(
-            begin: const Offset(0, 0.2),
+            begin: const Offset(0, 0.15),
             end: Offset.zero,
           ).animate(
             CurvedAnimation(
@@ -385,12 +315,12 @@ class _SignInScreenState extends State<SignInScreen>
           child: _buildPasswordField(isSmallScreen),
         ),
       ),
-      const SizedBox(height: 12),
+      const SizedBox(height: 8),
       FadeTransition(
         opacity: _fadeAnimation,
         child: SlideTransition(
           position: Tween<Offset>(
-            begin: const Offset(0, 0.2),
+            begin: const Offset(0, 0.15),
             end: Offset.zero,
           ).animate(
             CurvedAnimation(
@@ -407,11 +337,12 @@ class _SignInScreenState extends State<SignInScreen>
   Widget _buildEmailField(bool isSmallScreen) {
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
+        color: _kWhite,
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
+            color: _kPurple.withOpacity(0.06),
+            blurRadius: 12,
             offset: const Offset(0, 4),
           ),
         ],
@@ -419,32 +350,27 @@ class _SignInScreenState extends State<SignInScreen>
       child: TextField(
         controller: _emailController,
         decoration: InputDecoration(
-          labelText: 'EMAIL ADDRESS',
-          prefixIcon: Icon(
-            Icons.email_outlined,
-            color: AppTheme.primaryGreen.withOpacity(0.6),
-            size: 20,
-          ),
-          filled: true,
-          fillColor: Colors.white,
+          labelText: 'Email Address',
+          labelStyle: TextStyle(color: _kTextSub, fontSize: 12),
+          prefixIcon: Icon(Icons.email_outlined, color: _kPurple, size: 20),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
             borderSide: BorderSide.none,
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
             borderSide: BorderSide.none,
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(
-              color: AppTheme.primaryGreen,
-              width: 2,
-            ),
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(color: _kPurple, width: 2),
           ),
+          filled: true,
+          fillColor: _kWhite,
+          contentPadding: const EdgeInsets.symmetric(vertical: 16),
         ),
         keyboardType: TextInputType.emailAddress,
-        style: TextStyle(fontSize: isSmallScreen ? 14 : 16),
+        style: TextStyle(fontSize: isSmallScreen ? 14 : 15),
       ),
     );
   }
@@ -452,11 +378,12 @@ class _SignInScreenState extends State<SignInScreen>
   Widget _buildPasswordField(bool isSmallScreen) {
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
+        color: _kWhite,
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
+            color: _kPurple.withOpacity(0.06),
+            blurRadius: 12,
             offset: const Offset(0, 4),
           ),
         ],
@@ -465,46 +392,39 @@ class _SignInScreenState extends State<SignInScreen>
         controller: _passwordController,
         obscureText: _obscurePassword,
         decoration: InputDecoration(
-          labelText: 'PASSWORD',
-          prefixIcon: Icon(
-            Icons.lock_outline,
-            color: AppTheme.primaryGreen.withOpacity(0.6),
-            size: 20,
-          ),
+          labelText: 'Password',
+          labelStyle: TextStyle(color: _kTextSub, fontSize: 12),
+          prefixIcon: Icon(Icons.lock_outline, color: _kPurple, size: 20),
           suffixIcon: IconButton(
             icon: AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
               child: Icon(
                 _obscurePassword ? Icons.visibility_off : Icons.visibility,
                 key: ValueKey(_obscurePassword),
-                color: AppTheme.primaryGreen.withOpacity(0.6),
+                color: _kPurple,
+                size: 20,
               ),
             ),
-            onPressed: () {
-              setState(() {
-                _obscurePassword = !_obscurePassword;
-              });
-            },
+            onPressed: () =>
+                setState(() => _obscurePassword = !_obscurePassword),
           ),
-          filled: true,
-          fillColor: Colors.white,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
             borderSide: BorderSide.none,
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
             borderSide: BorderSide.none,
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(
-              color: AppTheme.primaryGreen,
-              width: 2,
-            ),
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(color: _kPurple, width: 2),
           ),
+          filled: true,
+          fillColor: _kWhite,
+          contentPadding: const EdgeInsets.symmetric(vertical: 16),
         ),
-        style: TextStyle(fontSize: isSmallScreen ? 14 : 16),
+        style: TextStyle(fontSize: isSmallScreen ? 14 : 15),
       ),
     );
   }
@@ -512,35 +432,52 @@ class _SignInScreenState extends State<SignInScreen>
   Widget _buildForgotPasswordButton() {
     return Align(
       alignment: Alignment.centerRight,
-      child: TweenAnimationBuilder(
-        tween: Tween<double>(begin: 0, end: 1),
-        duration: const Duration(milliseconds: 600),
-        builder: (context, double value, child) {
-          return Opacity(
-            opacity: value,
-            child: Transform.translate(
-              offset: Offset(20 * (1 - value), 0),
-              child: child,
-            ),
-          );
-        },
-        child: TextButton(
-          onPressed: () {
-            _showForgotPasswordDialog();
-          },
-          style: TextButton.styleFrom(
-            foregroundColor: AppTheme.richGold,
-          ),
-          child: Text(
-            'FORGOT PASSWORD?',
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  fontSize: 10,
-                  color: AppTheme.richGold,
-                  fontWeight: FontWeight.w600,
-                ),
+      child: TextButton(
+        onPressed: () => _showForgotPasswordDialog(),
+        style: TextButton.styleFrom(
+          foregroundColor: _kPurple,
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        ),
+        child: Text(
+          'Forgot Password?',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: _kPurple,
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildDivider() {
+    return Row(
+      children: [
+        Expanded(
+          child: Divider(
+            color: _kPurple.withOpacity(0.2),
+            thickness: 1,
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Text(
+            'OR',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: _kTextSub,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Divider(
+            color: _kPurple.withOpacity(0.2),
+            thickness: 1,
+          ),
+        ),
+      ],
     );
   }
 
@@ -555,57 +492,33 @@ class _SignInScreenState extends State<SignInScreen>
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
       final appState = Provider.of<AppState>(context, listen: false);
-
       await appState.signIn(
-        _emailController.text.trim(),
-        _passwordController.text,
-      );
-
-      if (mounted) {
-        context.go('/profile');
-      }
+          _emailController.text.trim(), _passwordController.text);
+      if (mounted) context.go('/profile');
     } catch (e) {
-      if (mounted) {
+      if (mounted)
         _showErrorSnackBar(e.toString().replaceAll('Exception:', ''));
-      }
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   Future<void> _handleGoogleSignIn() async {
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
       final appState = Provider.of<AppState>(context, listen: false);
-
       await appState.signInWithGoogle();
-
-      if (mounted) {
-        context.go('/profile');
-      }
+      if (mounted) context.go('/profile');
     } catch (e) {
-      if (mounted) {
+      if (mounted)
         _showErrorSnackBar(e.toString().replaceAll('Exception:', ''));
-      }
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -614,14 +527,14 @@ class _SignInScreenState extends State<SignInScreen>
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.error_outline, color: Colors.white),
-            const SizedBox(width: 12),
+            Icon(Icons.error_outline, color: _kWhite, size: 18),
+            const SizedBox(width: 10),
             Expanded(child: Text(message)),
           ],
         ),
-        backgroundColor: Colors.red.shade600,
+        backgroundColor: _kRed,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         duration: const Duration(seconds: 3),
       ),
     );
@@ -633,7 +546,8 @@ class _SignInScreenState extends State<SignInScreen>
     showDialog(
       context: context,
       builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: _kWhite,
         child: TweenAnimationBuilder(
           tween: Tween<double>(begin: 0.8, end: 1.0),
           duration: const Duration(milliseconds: 400),
@@ -644,10 +558,8 @@ class _SignInScreenState extends State<SignInScreen>
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              gradient: LinearGradient(
-                colors: [Colors.white, AppTheme.pinkContainer.withOpacity(0.3)],
-              ),
+              borderRadius: BorderRadius.circular(24),
+              color: _kWhite,
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -656,37 +568,42 @@ class _SignInScreenState extends State<SignInScreen>
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppTheme.primaryGreen.withOpacity(0.1),
+                    color: _kPurpleSoft,
                   ),
-                  child: Icon(
-                    Icons.email_outlined,
-                    size: 60,
-                    color: AppTheme.primaryGreen,
-                  ),
+                  child: Icon(Icons.lock_reset, size: 48, color: _kPurple),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
                 Text(
                   'Reset Password',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        color: AppTheme.primaryGreen,
-                        fontWeight: FontWeight.bold,
-                      ),
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: _kText,
+                  ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 Text(
                   'Enter your email address to receive a password reset link.',
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyMedium,
+                  style: TextStyle(color: _kTextSub, fontSize: 13),
                 ),
                 const SizedBox(height: 24),
                 TextField(
                   controller: emailController,
                   decoration: InputDecoration(
                     hintText: 'Email Address',
-                    prefixIcon: Icon(Icons.email_outlined,
-                        color: AppTheme.primaryGreen),
+                    prefixIcon: Icon(Icons.email_outlined, color: _kPurple),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: _kPurpleSoft),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: _kPurpleSoft),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: _kPurple, width: 2),
                     ),
                   ),
                 ),
@@ -701,6 +618,8 @@ class _SignInScreenState extends State<SignInScreen>
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
+                          side: BorderSide(color: _kPurpleSoft),
+                          foregroundColor: _kTextSub,
                         ),
                         child: const Text('Cancel'),
                       ),
@@ -710,28 +629,25 @@ class _SignInScreenState extends State<SignInScreen>
                       child: ElevatedButton(
                         onPressed: () async {
                           Navigator.pop(context);
-
                           try {
                             await FirebaseAuth.instance.sendPasswordResetEmail(
                               email: emailController.text.trim(),
                             );
                             _showErrorSnackBar(
-                              'Password reset email sent! Check your inbox.',
-                            );
+                                'Reset email sent! Check your inbox.');
                           } catch (e) {
-                            _showErrorSnackBar(
-                              'Failed to send reset email. Please try again.',
-                            );
+                            _showErrorSnackBar('Failed to send reset email.');
                           }
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.primaryGreen,
+                          backgroundColor: _kPurple,
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        child: const Text('Send'),
+                        child: const Text('Send',
+                            style: TextStyle(color: _kWhite)),
                       ),
                     ),
                   ],
@@ -751,7 +667,7 @@ class _SignInScreenState extends State<SignInScreen>
         pageBuilder: (context, animation, secondaryAnimation) =>
             const SignUpScreen(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          const begin = Offset(1.0, 0.0);
+          const begin = Offset(0.3, 0);
           const end = Offset.zero;
           const curve = Curves.easeInOutCubic;
           var tween =
@@ -759,13 +675,13 @@ class _SignInScreenState extends State<SignInScreen>
           var offsetAnimation = animation.drive(tween);
           return SlideTransition(position: offsetAnimation, child: child);
         },
-        transitionDuration: const Duration(milliseconds: 500),
+        transitionDuration: const Duration(milliseconds: 400),
       ),
     );
   }
 }
 
-// Sign Up Screen with Enhanced Animations
+// ─── Sign Up Screen ──────────────────────────────────────────────────────────
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
 
@@ -792,7 +708,7 @@ class _SignUpScreenState extends State<SignUpScreen>
   void initState() {
     super.initState();
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 1000),
       vsync: this,
     );
 
@@ -801,7 +717,7 @@ class _SignUpScreenState extends State<SignUpScreen>
     );
 
     _slideAnimation =
-        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+        Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(
       CurvedAnimation(
         parent: _animationController,
         curve: Curves.easeOutCubic,
@@ -831,138 +747,160 @@ class _SignUpScreenState extends State<SignUpScreen>
     final isSmallScreen = screenSize.width < 600;
 
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              AppTheme.alabaster,
-              AppTheme.pinkContainer.withOpacity(0.3),
-            ],
+      backgroundColor: _kBg,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: EdgeInsets.symmetric(
+            horizontal: isSmallScreen ? 20 : 32,
+            vertical: 24,
           ),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            padding: EdgeInsets.symmetric(
-              horizontal: isSmallScreen ? 20 : 32,
-              vertical: isSmallScreen ? 20 : 40,
-            ),
-            child: FadeTransition(
-              opacity: _fadeAnimation,
-              child: SlideTransition(
-                position: _slideAnimation,
-                child: ScaleTransition(
-                  scale: _formScaleAnimation,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Animated Back Button
-                      TweenAnimationBuilder(
-                        tween: Tween<double>(begin: -20, end: 0),
-                        duration: const Duration(milliseconds: 500),
-                        builder: (context, double value, child) {
-                          return Transform.translate(
-                            offset: Offset(value, 0),
-                            child: child,
-                          );
-                        },
-                        child: IconButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
-                          icon: const Icon(Icons.arrow_back),
-                          padding: EdgeInsets.zero,
-                          alignment: Alignment.centerLeft,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      // Animated Title
-                      ShaderMask(
-                        shaderCallback: (bounds) => LinearGradient(
-                          colors: [
-                            AppTheme.primaryGreen,
-                            AppTheme.richGold,
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ).createShader(bounds),
-                        child: AnimatedDefaultTextStyle(
-                          duration: const Duration(milliseconds: 500),
-                          style: Theme.of(context)
-                              .textTheme
-                              .headlineLarge
-                              ?.copyWith(
-                                fontSize: isSmallScreen ? 28 : 36,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ) ?? const TextStyle(),
-                          child: const Text('Create Account'),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 600),
-                        child: Text(
-                          'Join the world of botanical prestige',
-                          style: TextStyle(
-                            color: AppTheme.outline,
-                            fontSize: isSmallScreen ? 12 : 14,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 40),
-                      // Animated Form Fields
-                      ..._buildAnimatedFormFields(isSmallScreen),
-                      const SizedBox(height: 32),
-                      // Sign Up Button
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        child: _isLoading
-                            ? const Center(
-                                child: CircularProgressIndicator(
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    AppTheme.primaryGreen,
-                                  ),
-                                ),
-                              )
-                            : PrimaryButton(
-                                label: 'Sign Up',
-                                onPressed: _handleSignUp,
+          child: FadeTransition(
+            opacity: _fadeAnimation,
+            child: SlideTransition(
+              position: _slideAnimation,
+              child: ScaleTransition(
+                scale: _formScaleAnimation,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Back Button
+                    TweenAnimationBuilder(
+                      tween: Tween<double>(begin: -20, end: 0),
+                      duration: const Duration(milliseconds: 400),
+                      builder: (context, double value, child) {
+                        return Transform.translate(
+                          offset: Offset(value, 0),
+                          child: child,
+                        );
+                      },
+                      child: IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: _kWhite,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: _kPurple.withOpacity(0.1),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
                               ),
+                            ],
+                          ),
+                          child: const Icon(Icons.arrow_back,
+                              color: _kPurple, size: 20),
+                        ),
+                        padding: EdgeInsets.zero,
                       ),
-                      const SizedBox(height: 24),
-                      // Sign In Link
-                      Center(
-                        child: InkWell(
-                          onTap: () => Navigator.pop(context),
-                          child: AnimatedDefaultTextStyle(
-                            duration: const Duration(milliseconds: 300),
+                    ),
+                    const SizedBox(height: 30),
+
+                    // Title Section
+                    ShaderMask(
+                      shaderCallback: (bounds) => LinearGradient(
+                        colors: [_kPurple, _kGold],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ).createShader(bounds),
+                      child: Text(
+                        'Create Account',
+                        style: TextStyle(
+                          fontSize: isSmallScreen ? 28 : 36,
+                          fontWeight: FontWeight.w800,
+                          color: _kWhite,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Join our floral community',
+                      style: TextStyle(
+                        fontSize: isSmallScreen ? 13 : 14,
+                        color: _kTextSub,
+                      ),
+                    ),
+                    const SizedBox(height: 40),
+
+                    // Form Fields
+                    _buildTextField(
+                      controller: _usernameController,
+                      label: 'Username',
+                      icon: Icons.person_outline,
+                      isSmallScreen: isSmallScreen,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildTextField(
+                      controller: _emailController,
+                      label: 'Email Address',
+                      icon: Icons.email_outlined,
+                      isSmallScreen: isSmallScreen,
+                      keyboardType: TextInputType.emailAddress,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildPasswordField(
+                      controller: _passwordController,
+                      label: 'Password',
+                      obscure: _obscurePassword,
+                      isSmallScreen: isSmallScreen,
+                      onToggle: () =>
+                          setState(() => _obscurePassword = !_obscurePassword),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildPasswordField(
+                      controller: _confirmPasswordController,
+                      label: 'Confirm Password',
+                      obscure: _obscureConfirmPassword,
+                      isSmallScreen: isSmallScreen,
+                      onToggle: () => setState(() =>
+                          _obscureConfirmPassword = !_obscureConfirmPassword),
+                    ),
+                    const SizedBox(height: 32),
+
+                    // Sign Up Button
+                    _isLoading
+                        ? const Center(
+                            child: CircularProgressIndicator(
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(_kPurple),
+                            ),
+                          )
+                        : PrimaryButton(
+                            label: 'Sign Up',
+                            onPressed: _handleSignUp,
+                          ),
+                    const SizedBox(height: 24),
+
+                    // Sign In Link
+                    Center(
+                      child: InkWell(
+                        onTap: () => Navigator.pop(context),
+                        child: RichText(
+                          text: TextSpan(
+                            text: "Already have an account? ",
                             style: TextStyle(
-                              fontSize: isSmallScreen ? 11 : 12,
-                              color: AppTheme.outline,
+                              color: _kTextSub,
+                              fontSize: isSmallScreen ? 12 : 13,
                             ),
-                            child: Text.rich(
+                            children: [
                               TextSpan(
-                                text: "ALREADY HAVE AN ACCOUNT? ",
-                                children: [
-                                  TextSpan(
-                                    text: 'SIGN IN',
-                                    style: TextStyle(
-                                      color: AppTheme.primaryGreen,
-                                      fontWeight: FontWeight.bold,
-                                      decoration: TextDecoration.underline,
-                                    ),
-                                  ),
-                                ],
+                                text: 'Sign In',
+                                style: TextStyle(
+                                  color: _kPurple,
+                                  fontWeight: FontWeight.w700,
+                                  decoration: TextDecoration.underline,
+                                  decorationColor: _kPurple,
+                                ),
                               ),
-                            ),
+                            ],
                           ),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
                 ),
               ),
             ),
@@ -972,134 +910,49 @@ class _SignUpScreenState extends State<SignUpScreen>
     );
   }
 
-  List<Widget> _buildAnimatedFormFields(bool isSmallScreen) {
-    final fields = [
-      _buildTextField(
-        controller: _usernameController,
-        label: 'USERNAME',
-        icon: Icons.person_outline,
-        delay: 0.1,
-        isSmallScreen: isSmallScreen,
-      ),
-      const SizedBox(height: 20),
-      _buildTextField(
-        controller: _emailController,
-        label: 'EMAIL ADDRESS',
-        icon: Icons.email_outlined,
-        delay: 0.2,
-        isSmallScreen: isSmallScreen,
-        keyboardType: TextInputType.emailAddress,
-      ),
-      const SizedBox(height: 20),
-      _buildPasswordField(
-        controller: _passwordController,
-        label: 'PASSWORD',
-        obscure: _obscurePassword,
-        delay: 0.3,
-        isSmallScreen: isSmallScreen,
-        onToggle: () {
-          setState(() {
-            _obscurePassword = !_obscurePassword;
-          });
-        },
-      ),
-      const SizedBox(height: 20),
-      _buildPasswordField(
-        controller: _confirmPasswordController,
-        label: 'CONFIRM PASSWORD',
-        obscure: _obscureConfirmPassword,
-        delay: 0.4,
-        isSmallScreen: isSmallScreen,
-        onToggle: () {
-          setState(() {
-            _obscureConfirmPassword = !_obscureConfirmPassword;
-          });
-        },
-      ),
-    ];
-
-    List<Widget> animatedFields = [];
-    for (var i = 0; i < fields.length; i++) {
-      animatedFields.add(
-        FadeTransition(
-          opacity: _fadeAnimation,
-          child: SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(0, 0.2),
-              end: Offset.zero,
-            ).animate(
-              CurvedAnimation(
-                parent: _animationController,
-                curve: Interval(0.1 * (i + 1), 1.0, curve: Curves.easeOut),
-              ),
-            ),
-            child: fields[i],
-          ),
-        ),
-      );
-      if (i < fields.length - 1) {
-        animatedFields.add(const SizedBox(height: 20));
-      }
-    }
-    return animatedFields;
-  }
-
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
     required IconData icon,
-    required double delay,
     required bool isSmallScreen,
     TextInputType keyboardType = TextInputType.text,
   }) {
-    return TweenAnimationBuilder(
-      tween: Tween<double>(begin: 0, end: 1),
-      duration: Duration(milliseconds: (400 + (delay * 200)).toInt()),
-      builder: (context, double value, child) {
-        return Opacity(
-          opacity: value,
-          child: Transform.translate(
-            offset: Offset(20 * (1 - value), 0),
-            child: child,
+    return Container(
+      decoration: BoxDecoration(
+        color: _kWhite,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: _kPurple.withOpacity(0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
-        );
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: TextField(
-          controller: controller,
-          decoration: InputDecoration(
-            labelText: label,
-            prefixIcon: Icon(
-              icon,
-              color: AppTheme.primaryGreen.withOpacity(0.6),
-            ),
-            filled: true,
-            fillColor: Colors.white,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: AppTheme.primaryGreen,
-                width: 2,
-              ),
-            ),
+        ],
+      ),
+      child: TextField(
+        controller: controller,
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(color: _kTextSub, fontSize: 12),
+          prefixIcon: Icon(icon, color: _kPurple, size: 20),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide.none,
           ),
-          keyboardType: keyboardType,
-          style: TextStyle(fontSize: isSmallScreen ? 14 : 16),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(color: _kPurple, width: 2),
+          ),
+          filled: true,
+          fillColor: _kWhite,
+          contentPadding: const EdgeInsets.symmetric(vertical: 16),
         ),
+        keyboardType: keyboardType,
+        style: TextStyle(fontSize: isSmallScreen ? 14 : 15),
       ),
     );
   }
@@ -1108,69 +961,57 @@ class _SignUpScreenState extends State<SignUpScreen>
     required TextEditingController controller,
     required String label,
     required bool obscure,
-    required double delay,
     required bool isSmallScreen,
     required VoidCallback onToggle,
   }) {
-    return TweenAnimationBuilder(
-      tween: Tween<double>(begin: 0, end: 1),
-      duration: Duration(milliseconds: (400 + (delay * 200)).toInt()),
-      builder: (context, double value, child) {
-        return Opacity(
-          opacity: value,
-          child: Transform.translate(
-            offset: Offset(20 * (1 - value), 0),
-            child: child,
+    return Container(
+      decoration: BoxDecoration(
+        color: _kWhite,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: _kPurple.withOpacity(0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
-        );
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: TextField(
-          controller: controller,
-          obscureText: obscure,
-          decoration: InputDecoration(
-            labelText: label,
-            prefixIcon: Icon(
-              Icons.lock_outline,
-              color: AppTheme.primaryGreen.withOpacity(0.6),
-            ),
-            suffixIcon: IconButton(
-              icon: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 200),
-                child: Icon(
-                  obscure ? Icons.visibility_off : Icons.visibility,
-                  key: ValueKey(obscure),
-                  color: AppTheme.primaryGreen.withOpacity(0.6),
-                ),
-              ),
-              onPressed: onToggle,
-            ),
-            filled: true,
-            fillColor: Colors.white,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: AppTheme.primaryGreen,
-                width: 2,
+        ],
+      ),
+      child: TextField(
+        controller: controller,
+        obscureText: obscure,
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(color: _kTextSub, fontSize: 12),
+          prefixIcon: Icon(Icons.lock_outline, color: _kPurple, size: 20),
+          suffixIcon: IconButton(
+            icon: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: Icon(
+                obscure ? Icons.visibility_off : Icons.visibility,
+                key: ValueKey(obscure),
+                color: _kPurple,
+                size: 20,
               ),
             ),
+            onPressed: onToggle,
           ),
-          style: TextStyle(fontSize: isSmallScreen ? 14 : 16),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(color: _kPurple, width: 2),
+          ),
+          filled: true,
+          fillColor: _kWhite,
+          contentPadding: const EdgeInsets.symmetric(vertical: 16),
         ),
+        style: TextStyle(fontSize: isSmallScreen ? 14 : 15),
       ),
     );
   }
@@ -1180,53 +1021,37 @@ class _SignUpScreenState extends State<SignUpScreen>
       _showError('Please enter a username');
       return;
     }
-
     if (_emailController.text.trim().isEmpty) {
       _showError('Please enter your email');
       return;
     }
-
     if (_passwordController.text.isEmpty) {
       _showError('Please enter a password');
       return;
     }
-
     if (_passwordController.text != _confirmPasswordController.text) {
       _showError('Passwords do not match');
       return;
     }
-
     if (_passwordController.text.length < 6) {
       _showError('Password must be at least 6 characters');
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
       final appState = Provider.of<AppState>(context, listen: false);
-
       await appState.signUp(
         _emailController.text.trim(),
         _passwordController.text,
         _usernameController.text.trim(),
       );
-
-      if (mounted) {
-        context.go('/profile');
-      }
+      if (mounted) context.go('/profile');
     } catch (e) {
-      if (mounted) {
-        _showError(e.toString().replaceAll('Exception:', ''));
-      }
+      if (mounted) _showError(e.toString().replaceAll('Exception:', ''));
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -1235,14 +1060,14 @@ class _SignUpScreenState extends State<SignUpScreen>
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.error_outline, color: Colors.white),
-            const SizedBox(width: 12),
+            Icon(Icons.error_outline, color: _kWhite, size: 18),
+            const SizedBox(width: 10),
             Expanded(child: Text(message)),
           ],
         ),
-        backgroundColor: Colors.red.shade600,
+        backgroundColor: _kRed,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         duration: const Duration(seconds: 3),
       ),
     );

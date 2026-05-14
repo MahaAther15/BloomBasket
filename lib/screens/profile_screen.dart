@@ -131,19 +131,25 @@ class ProfileScreen extends StatelessWidget {
                                         borderRadius:
                                             const BorderRadius.vertical(
                                                 top: Radius.circular(12)),
-                                        child: Image.asset(
-                                          item.product.imageUrl,
-                                          fit: BoxFit.cover,
-                                          width: double.infinity,
-                                          errorBuilder:
-                                              (context, error, stackTrace) {
-                                            return Container(
-                                              color: Colors.grey[200],
-                                              child: const Icon(
-                                                  Icons.image_not_supported),
-                                            );
-                                          },
-                                        ),
+                                        child: item.product.imageUrl.startsWith('assets/')
+                                            ? Image.asset(
+                                                item.product.imageUrl,
+                                                fit: BoxFit.cover,
+                                                width: double.infinity,
+                                                errorBuilder:
+                                                    (context, error, stackTrace) {
+                                                  return Container(
+                                                    color: Colors.grey[200],
+                                                    child: const Icon(
+                                                        Icons.image_not_supported),
+                                                  );
+                                                },
+                                              )
+                                            : Container(
+                                                color: Colors.grey[200],
+                                                child: const Icon(
+                                                    Icons.image_not_supported),
+                                              ),
                                       ),
                                     ),
                                     Padding(
@@ -198,19 +204,25 @@ class ProfileScreen extends StatelessWidget {
                                         borderRadius:
                                             const BorderRadius.vertical(
                                                 top: Radius.circular(12)),
-                                        child: Image.asset(
-                                          product.imageUrl,
-                                          fit: BoxFit.cover,
-                                          width: double.infinity,
-                                          errorBuilder:
-                                              (context, error, stackTrace) {
-                                            return Container(
-                                              color: Colors.grey[200],
-                                              child: const Icon(
-                                                  Icons.image_not_supported),
-                                            );
-                                          },
-                                        ),
+                                        child: product.imageUrl.startsWith('assets/')
+                                            ? Image.asset(
+                                                product.imageUrl,
+                                                fit: BoxFit.cover,
+                                                width: double.infinity,
+                                                errorBuilder:
+                                                    (context, error, stackTrace) {
+                                                  return Container(
+                                                    color: Colors.grey[200],
+                                                    child: const Icon(
+                                                        Icons.image_not_supported),
+                                                  );
+                                                },
+                                              )
+                                            : Container(
+                                                color: Colors.grey[200],
+                                                child: const Icon(
+                                                    Icons.image_not_supported),
+                                              ),
                                       ),
                                     ),
                                     Padding(
@@ -458,10 +470,14 @@ class ProfileScreen extends StatelessWidget {
   // ✅ FIXED: Get status color based on OrderStatus
   Color _getStatusColor(OrderStatus status) {
     switch (status) {
+      case OrderStatus.pending:
+        return Colors.orange;
       case OrderStatus.confirmed:
         return Colors.blue;
       case OrderStatus.prepared:
-        return Colors.orange;
+        return Colors.amber;
+      case OrderStatus.shipped:
+        return Colors.indigo;
       case OrderStatus.outForDelivery:
         return Colors.purple;
       case OrderStatus.delivered:
@@ -474,10 +490,14 @@ class ProfileScreen extends StatelessWidget {
   // ✅ FIXED: Get status text based on OrderStatus
   String _getStatusText(OrderStatus status) {
     switch (status) {
+      case OrderStatus.pending:
+        return 'PENDING';
       case OrderStatus.confirmed:
         return 'CONFIRMED';
       case OrderStatus.prepared:
         return 'PREPARED';
+      case OrderStatus.shipped:
+        return 'SHIPPED';
       case OrderStatus.outForDelivery:
         return 'OUT FOR DELIVERY';
       case OrderStatus.delivered:

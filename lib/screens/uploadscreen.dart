@@ -202,7 +202,7 @@ class _UploadScreenState extends State<UploadScreen> with SingleTickerProviderSt
                     ),
                     const Text(
                       'UPLOADING TO BLOOMBASKET...',
-                      style: TextStyle(color: Colors.black54, letterSpacing: 1.2),
+                      style: TextStyle(color: Colors.white70, letterSpacing: 1.2),
                     ),
                   ],
                 ),

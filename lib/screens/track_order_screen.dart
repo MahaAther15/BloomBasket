@@ -1,6 +1,17 @@
 import 'package:flutter/material.dart';
 import '../app_theme.dart';
 
+// ─── Shared Palette (Matching Your App) ──────────────────────────────────────
+const _kPurple = Color(0xFF7457A2);
+const _kPurpleLight = Color(0xFF9B7BC8);
+const _kPurpleSoft = Color(0xFFEDE7F6);
+const _kBg = Color(0xFFFAF8FF);
+const _kWhite = Colors.white;
+const _kText = Color(0xFF2D1B4E);
+const _kTextSub = Color(0xFF8E7BAE);
+const _kGold = Color(0xFFF7C948);
+const _kGreen = Color(0xFF4CAF50);
+
 class TrackOrderScreen extends StatefulWidget {
   const TrackOrderScreen({super.key});
 
@@ -77,18 +88,27 @@ class _TrackOrderScreenState extends State<TrackOrderScreen>
     final isSmallScreen = screenSize.width < 600;
 
     return Scaffold(
+      backgroundColor: _kBg,
       appBar: AppBar(
-        title: AnimatedDefaultTextStyle(
-          duration: const Duration(milliseconds: 300),
-          style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                letterSpacing: 4,
-                fontWeight: FontWeight.w700,
-              ) ?? const TextStyle(),
-          child: const Text('TRACK ORDER'),
+        backgroundColor: _kWhite,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: _kText),
+          onPressed: () => Navigator.pop(context),
         ),
+        title: const Text(
+          'TRACK ORDER',
+          style: TextStyle(
+            letterSpacing: 4,
+            fontWeight: FontWeight.w700,
+            fontSize: 16,
+            color: _kText,
+          ),
+        ),
+        centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh, color: _kPurple),
             onPressed: () {
               _animationController.reset();
               _animationController.forward();
@@ -96,98 +116,88 @@ class _TrackOrderScreenState extends State<TrackOrderScreen>
           ),
         ],
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              AppTheme.alabaster,
-              AppTheme.pinkContainer.withOpacity(0.1),
-            ],
-          ),
-        ),
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: EdgeInsets.all(isSmallScreen ? 16 : 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Animated Order Info Card
-              FadeTransition(
-                opacity: _fadeAnimation,
-                child: SlideTransition(
-                  position: Tween<Offset>(
-                    begin: const Offset(0, 0.2),
-                    end: Offset.zero,
-                  ).animate(
-                    CurvedAnimation(
-                      parent: _animationController,
-                      curve: const Interval(0.0, 0.3, curve: Curves.easeOut),
-                    ),
+      body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        padding: EdgeInsets.all(isSmallScreen ? 16 : 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Animated Order Info Card
+            FadeTransition(
+              opacity: _fadeAnimation,
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0, 0.2),
+                  end: Offset.zero,
+                ).animate(
+                  CurvedAnimation(
+                    parent: _animationController,
+                    curve: const Interval(0.0, 0.3, curve: Curves.easeOut),
                   ),
-                  child: ScaleTransition(
-                    scale: _cardAnimation,
-                    child: _buildOrderCard(isSmallScreen),
+                ),
+                child: ScaleTransition(
+                  scale: _cardAnimation,
+                  child: _buildOrderCard(isSmallScreen),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 48),
+
+            // Animated Status Title
+            FadeTransition(
+              opacity: _fadeAnimation,
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0, 0.2),
+                  end: Offset.zero,
+                ).animate(
+                  CurvedAnimation(
+                    parent: _animationController,
+                    curve: const Interval(0.1, 0.4, curve: Curves.easeOut),
+                  ),
+                ),
+                child: Text(
+                  'ORDER STATUS',
+                  style: TextStyle(
+                    letterSpacing: 3,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                    color: _kTextSub,
                   ),
                 ),
               ),
+            ),
 
-              const SizedBox(height: 48),
+            const SizedBox(height: 24),
 
-              // Animated Status Title
-              FadeTransition(
-                opacity: _fadeAnimation,
-                child: SlideTransition(
-                  position: Tween<Offset>(
-                    begin: const Offset(0, 0.2),
-                    end: Offset.zero,
-                  ).animate(
-                    CurvedAnimation(
-                      parent: _animationController,
-                      curve: const Interval(0.1, 0.4, curve: Curves.easeOut),
-                    ),
-                  ),
-                  child: Text(
-                    'STATUS',
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          letterSpacing: 3,
-                          fontWeight: FontWeight.w700,
-                        ),
+            // Animated Vertical Stepper
+            ..._buildAnimatedStatusSteps(),
+
+            const SizedBox(height: 48),
+
+            // Animated Map Placeholder
+            FadeTransition(
+              opacity: _fadeAnimation,
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0, 0.3),
+                  end: Offset.zero,
+                ).animate(
+                  CurvedAnimation(
+                    parent: _animationController,
+                    curve: const Interval(0.5, 0.8, curve: Curves.easeOut),
                   ),
                 ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // Animated Vertical Stepper
-              ..._buildAnimatedStatusSteps(),
-
-              const SizedBox(height: 48),
-
-              // Animated Map Placeholder
-              FadeTransition(
-                opacity: _fadeAnimation,
-                child: SlideTransition(
-                  position: Tween<Offset>(
-                    begin: const Offset(0, 0.3),
-                    end: Offset.zero,
-                  ).animate(
-                    CurvedAnimation(
-                      parent: _animationController,
-                      curve: const Interval(0.5, 0.8, curve: Curves.easeOut),
-                    ),
-                  ),
-                  child: ScaleTransition(
-                    scale: _mapAnimation,
-                    child: _buildMapPlaceholder(isSmallScreen),
-                  ),
+                child: ScaleTransition(
+                  scale: _mapAnimation,
+                  child: _buildMapPlaceholder(isSmallScreen),
                 ),
               ),
+            ),
 
-              const SizedBox(height: 24),
-            ],
-          ),
+            const SizedBox(height: 24),
+          ],
         ),
       ),
     );
@@ -197,18 +207,15 @@ class _TrackOrderScreenState extends State<TrackOrderScreen>
     return Container(
       padding: EdgeInsets.all(isSmallScreen ? 16 : 24),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            AppTheme.primaryGreen,
-            AppTheme.primaryContainer,
-          ],
+          colors: [_kPurple, _kPurpleLight],
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryGreen.withOpacity(0.3),
+            color: _kPurple.withOpacity(0.3),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -224,11 +231,12 @@ class _TrackOrderScreenState extends State<TrackOrderScreen>
                 children: [
                   Text(
                     'ORDER #BB-89012',
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          color: Colors.white,
-                          letterSpacing: 2,
-                          fontSize: isSmallScreen ? 10 : 12,
-                        ),
+                    style: TextStyle(
+                      color: _kWhite,
+                      letterSpacing: 2,
+                      fontSize: isSmallScreen ? 10 : 12,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   _buildStatusChip(),
@@ -243,12 +251,12 @@ class _TrackOrderScreenState extends State<TrackOrderScreen>
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: _kWhite.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(
                   Icons.location_on_outlined,
-                  color: Colors.white,
+                  color: _kWhite,
                   size: 20,
                 ),
               ),
@@ -256,21 +264,20 @@ class _TrackOrderScreenState extends State<TrackOrderScreen>
               Expanded(
                 child: Text(
                   '123 BOTANICAL GARDENS, LONDON, UK',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.white.withOpacity(0.9),
-                        fontSize: isSmallScreen ? 12 : 14,
-                      ),
+                  style: TextStyle(
+                    color: _kWhite.withOpacity(0.9),
+                    fontSize: isSmallScreen ? 12 : 14,
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          // Delivery time estimate
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
+              color: _kWhite.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
               children: [
@@ -299,7 +306,7 @@ class _TrackOrderScreenState extends State<TrackOrderScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: AppTheme.pinkContainer,
+        color: _kGold,
         borderRadius: BorderRadius.circular(12),
       ),
       child: TweenAnimationBuilder(
@@ -310,13 +317,14 @@ class _TrackOrderScreenState extends State<TrackOrderScreen>
             opacity: value,
             child: Transform.scale(
               scale: value,
-              child: Text(
+              child: const Text(
                 'IN PROGRESS',
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                    ),
+                style: TextStyle(
+                  color: _kWhite,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5,
+                ),
               ),
             ),
           );
@@ -335,12 +343,12 @@ class _TrackOrderScreenState extends State<TrackOrderScreen>
           child: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: _kWhite.withOpacity(0.2),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(
               Icons.local_shipping,
-              color: Colors.white,
+              color: _kWhite,
               size: 24,
             ),
           ),
@@ -393,26 +401,25 @@ class _TrackOrderScreenState extends State<TrackOrderScreen>
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppTheme.primaryGreen.withOpacity(0.1),
-            AppTheme.pinkContainer.withOpacity(0.1),
+            _kPurple.withOpacity(0.08),
+            _kPurpleSoft.withOpacity(0.05),
           ],
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: AppTheme.primaryGreen.withOpacity(0.2),
+          color: _kPurple.withOpacity(0.15),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
+            color: _kPurple.withOpacity(0.06),
+            blurRadius: 12,
             offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Stack(
         children: [
-          // Map placeholder with animation
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -426,13 +433,13 @@ class _TrackOrderScreenState extends State<TrackOrderScreen>
                       child: Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: AppTheme.primaryGreen.withOpacity(0.1),
+                          color: _kPurple.withOpacity(0.1),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
                           Icons.map_outlined,
                           size: 48,
-                          color: AppTheme.primaryGreen,
+                          color: _kPurple,
                         ),
                       ),
                     );
@@ -442,7 +449,7 @@ class _TrackOrderScreenState extends State<TrackOrderScreen>
                 Text(
                   'Live location tracking coming soon',
                   style: TextStyle(
-                    color: AppTheme.outline,
+                    color: _kTextSub,
                     fontSize: isSmallScreen ? 10 : 12,
                     fontStyle: FontStyle.italic,
                   ),
@@ -450,7 +457,6 @@ class _TrackOrderScreenState extends State<TrackOrderScreen>
               ],
             ),
           ),
-          // Animated dots for loading effect
           Positioned(
             bottom: 16,
             left: 0,
@@ -473,7 +479,7 @@ class _TrackOrderScreenState extends State<TrackOrderScreen>
                           height: 6,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: AppTheme.primaryGreen.withOpacity(value),
+                            color: _kPurple.withOpacity(value),
                           ),
                         ),
                       ),
@@ -489,6 +495,7 @@ class _TrackOrderScreenState extends State<TrackOrderScreen>
   }
 }
 
+// ─── Animated Status Step Widget ─────────────────────────────────────────────
 class AnimatedStatusStep extends StatelessWidget {
   final String title;
   final String time;
@@ -541,13 +548,11 @@ class AnimatedStatusStep extends StatelessWidget {
                           height: 12,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: isCompleted
-                                ? AppTheme.primaryGreen
-                                : Colors.transparent,
+                            color: isCompleted ? _kPurple : Colors.transparent,
                             border: Border.all(
                               color: isCompleted
-                                  ? AppTheme.primaryGreen
-                                  : AppTheme.outline.withOpacity(0.3),
+                                  ? _kPurple
+                                  : _kTextSub.withOpacity(0.3),
                               width: 2,
                             ),
                           ),
@@ -556,7 +561,7 @@ class AnimatedStatusStep extends StatelessWidget {
                                   margin: const EdgeInsets.all(2),
                                   decoration: const BoxDecoration(
                                     shape: BoxShape.circle,
-                                    color: AppTheme.primaryGreen,
+                                    color: _kPurple,
                                   ),
                                 )
                               : null,
@@ -579,13 +584,12 @@ class AnimatedStatusStep extends StatelessWidget {
                                 end: Alignment.bottomCenter,
                                 colors: isCompleted
                                     ? [
-                                        AppTheme.primaryGreen,
-                                        AppTheme.primaryGreen
-                                            .withOpacity(value),
+                                        _kPurple,
+                                        _kPurple.withOpacity(value),
                                       ]
                                     : [
-                                        AppTheme.outline.withOpacity(0.1),
-                                        AppTheme.outline.withOpacity(0.05),
+                                        _kTextSub.withOpacity(0.1),
+                                        _kTextSub.withOpacity(0.05),
                                       ],
                               ),
                             ),
@@ -605,15 +609,13 @@ class AnimatedStatusStep extends StatelessWidget {
                       // Title with animation
                       AnimatedDefaultTextStyle(
                         duration: const Duration(milliseconds: 300),
-                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                              color: isCompleted
-                                  ? AppTheme.primaryGreen
-                                  : AppTheme.outline,
-                              fontWeight:
-                                  isCurrent ? FontWeight.w700 : FontWeight.w400,
-                              letterSpacing: 1,
-                              fontSize: isSmallScreen ? 11 : 12,
-                            ) ?? const TextStyle(),
+                        style: TextStyle(
+                          color: isCompleted ? _kPurple : _kTextSub,
+                          fontWeight:
+                              isCurrent ? FontWeight.w700 : FontWeight.w500,
+                          letterSpacing: 0.5,
+                          fontSize: isSmallScreen ? 11 : 12,
+                        ),
                         child: Row(
                           children: [
                             Text(title),
@@ -636,16 +638,12 @@ class AnimatedStatusStep extends StatelessWidget {
                               offset: Offset(20 * (1 - value), 0),
                               child: Text(
                                 time,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
-                                    ?.copyWith(
-                                      fontSize: isSmallScreen ? 10 : 12,
-                                      color: isCompleted
-                                          ? AppTheme.primaryGreen
-                                              .withOpacity(0.7)
-                                          : AppTheme.outline.withOpacity(0.5),
-                                    ),
+                                style: TextStyle(
+                                  fontSize: isSmallScreen ? 10 : 12,
+                                  color: isCompleted
+                                      ? _kPurple.withOpacity(0.7)
+                                      : _kTextSub.withOpacity(0.5),
+                                ),
                               ),
                             ),
                           );
@@ -661,10 +659,9 @@ class AnimatedStatusStep extends StatelessWidget {
                             builder: (context, double value, child) {
                               return LinearProgressIndicator(
                                 value: value,
-                                backgroundColor:
-                                    AppTheme.primaryGreen.withOpacity(0.1),
+                                backgroundColor: _kPurple.withOpacity(0.1),
                                 valueColor: const AlwaysStoppedAnimation<Color>(
-                                  AppTheme.primaryGreen,
+                                  _kPurple,
                                 ),
                                 borderRadius: BorderRadius.circular(2),
                               );
@@ -681,9 +678,9 @@ class AnimatedStatusStep extends StatelessWidget {
       ),
     );
   }
-
 }
 
+// ─── Pulsing Dot Widget ──────────────────────────────────────────────────────
 class _PulsingDot extends StatefulWidget {
   const _PulsingDot();
 
@@ -707,7 +704,7 @@ class _PulsingDotState extends State<_PulsingDot> {
             height: 8,
             decoration: const BoxDecoration(
               shape: BoxShape.circle,
-              color: AppTheme.primaryGreen,
+              color: _kPurple,
             ),
           ),
         );

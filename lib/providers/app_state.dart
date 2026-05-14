@@ -6,10 +6,12 @@ import '../models/product.dart';
 import '../models/cart_item.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/order.dart';
 
 class AppState extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // ✅ Google Sign In - Works for both Mobile & Web
   late final GoogleSignIn _googleSignIn;
@@ -61,6 +63,7 @@ class AppState extends ChangeNotifier {
 
       if (user != null) {
         _loadUserLocalData(user.uid);
+        _loadUserFromFirestore(user.uid);
       } else {
         _currentUserData = {};
         _cart.clear();
@@ -256,16 +259,89 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  // ✅ Save user data to Firestore
+  Future<void> _saveUserToFirestore(User user, {String? username}) async {
+    try {
+      final userData = {
+        'uid': user.uid,
+        'email': user.email,
+        'displayName': username ?? user.displayName ?? '',
+        'photoURL': user.photoURL ?? '',
+        'lastLoginAt': FieldValue.serverTimestamp(),
+        'favorites': _favorites.map((p) => p.id).toList(),
+        'cart': _cart
+            .map((item) => {
+                  'productId': item.product.id,
+                  'productName': item.product.name,
+                  'productPrice': item.product.price,
+                  'quantity': item.quantity,
+                })
+            .toList(),
+      };
+
+      await _firestore.collection('users').doc(user.uid).set(userData, SetOptions(merge: true));
+      print("✅ User data saved to Firestore: ${user.email}");
+    } catch (e) {
+      print("❌ Error saving user data to Firestore: $e");
+    }
+  }
+
+  // ✅ Load user data from Firestore
+  Future<void> _loadUserFromFirestore(String uid) async {
+    try {
+      DocumentSnapshot doc = await _firestore.collection('users').doc(uid).get();
+      
+      if (doc.exists) {
+        Map<String, dynamic> userData = doc.data() as Map<String, dynamic>;
+        _currentUserData = userData;
+
+        // Load favorites
+        List<String> favoriteIds = List<String>.from(userData['favorites'] ?? []);
+        _favorites = _products.where((p) => favoriteIds.contains(p.id)).toList();
+
+        // Load cart
+        List<dynamic> cartData = userData['cart'] ?? [];
+        _cart = [];
+        for (var item in cartData) {
+          final product = _products.firstWhere(
+            (p) => p.id == item['productId'],
+            orElse: () => Product(
+              id: item['productId'],
+              name: item['productName'],
+              description: '',
+              price: (item['productPrice'] as num).toDouble(),
+              imageUrl: '',
+              category: '',
+              tags: [],
+            ),
+          );
+          _cart.add(CartItem(product: product)..quantity = item['quantity']);
+        }
+
+        notifyListeners();
+        print("✅ User data loaded from Firestore for: ${userData['email']}");
+      }
+    } catch (e) {
+      print("❌ Error loading user data from Firestore: $e");
+    }
+  }
+
   OrderStatus _parseOrderStatus(String status) {
     switch (status) {
+      case 'OrderStatus.pending':
+        return OrderStatus.pending;
       case 'OrderStatus.confirmed':
         return OrderStatus.confirmed;
       case 'OrderStatus.prepared':
         return OrderStatus.prepared;
+      case 'OrderStatus.shipped':
+        return OrderStatus.shipped;
       case 'OrderStatus.outForDelivery':
         return OrderStatus.outForDelivery;
       case 'OrderStatus.delivered':
         return OrderStatus.delivered;
+      case 'OrderStatus.cancelled':
+        return OrderStatus.cancelled;
       default:
         return OrderStatus.confirmed;
     }
@@ -277,8 +353,9 @@ class AppState extends ChangeNotifier {
       await _auth.signInWithEmailAndPassword(email: email, password: password);
       _user = _auth.currentUser;
 
-      // Save user profile locally
+      // Sync with Firestore and local
       if (_user != null) {
+        await _loadUserFromFirestore(_user!.uid);
         await _saveUserLocalData(_user!);
       }
 
@@ -312,8 +389,9 @@ class AppState extends ChangeNotifier {
 
       _user = _auth.currentUser;
 
-      // Save newly created user profile locally with username
+      // Save to Firestore and locally
       if (_user != null) {
+        await _saveUserToFirestore(_user!, username: username);
         await _saveUserLocalData(_user!, username: username);
       }
 
@@ -366,8 +444,10 @@ class AppState extends ChangeNotifier {
 
       _user = userCredential.user;
 
-      // Save user profile locally
+      // Sync with Firestore and local
       if (_user != null) {
+        await _saveUserToFirestore(_user!); // Ensure doc exists
+        await _loadUserFromFirestore(_user!.uid);
         await _saveUserLocalData(_user!);
       }
 
@@ -765,7 +845,30 @@ class AppState extends ChangeNotifier {
   // ==================== ADMIN METHODS ====================
   void addProduct(Product product) {
     _products.insert(0, product);
+    
+    // Save to Firestore if user is logged in (as admin)
+    if (_user != null) {
+      _saveProductToFirestore(product);
+    }
+    
     notifyListeners();
+  }
+
+  Future<void> _saveProductToFirestore(Product product) async {
+    try {
+      await _firestore.collection('products').doc(product.id).set({
+        'id': product.id,
+        'name': product.name,
+        'description': product.description,
+        'price': product.price,
+        'imageUrl': product.imageUrl,
+        'category': product.category,
+        'tags': product.tags,
+      });
+      print("✅ Product saved to Firestore: ${product.name}");
+    } catch (e) {
+      print("❌ Error saving product to Firestore: $e");
+    }
   }
 
   void deleteProduct(String productId) {
@@ -778,9 +881,9 @@ class AppState extends ChangeNotifier {
     if (index != -1) {
       _orders[index] = _orders[index].copyWith(status: status);
       
-      // Update in local storage if user is logged in
+      // Update in local storage and Firestore if user is logged in
       if (_user != null) {
-         _updateUserLocalData({
+        _updateUserLocalData({
           'orders': _orders
               .map((order) => {
                     'id': order.id,
@@ -791,6 +894,7 @@ class AppState extends ChangeNotifier {
                   })
               .toList(),
         });
+        _saveUserToFirestore(_user!);
       }
       notifyListeners();
     }
@@ -805,7 +909,7 @@ class AppState extends ChangeNotifier {
       _cart.add(CartItem(product: product));
     }
 
-    // Save to local storage if user is logged in
+    // Save to local storage and Firestore if user is logged in
     if (_user != null) {
       _updateUserLocalData({
         'cart': _cart
@@ -817,6 +921,7 @@ class AppState extends ChangeNotifier {
                 })
             .toList(),
       });
+      _saveUserToFirestore(_user!);
     }
 
     notifyListeners();
@@ -825,7 +930,7 @@ class AppState extends ChangeNotifier {
   void removeFromCart(Product product) {
     _cart.removeWhere((i) => i.product.id == product.id);
 
-    // Save to local storage if user is logged in
+    // Save to local storage and Firestore if user is logged in
     if (_user != null) {
       _updateUserLocalData({
         'cart': _cart
@@ -837,6 +942,7 @@ class AppState extends ChangeNotifier {
                 })
             .toList(),
       });
+      _saveUserToFirestore(_user!);
     }
 
     notifyListeners();
@@ -845,9 +951,10 @@ class AppState extends ChangeNotifier {
   void clearCart() {
     _cart.clear();
 
-    // Save to local storage if user is logged in
+    // Save to local storage and Firestore if user is logged in
     if (_user != null) {
       _updateUserLocalData({'cart': []});
+      _saveUserToFirestore(_user!);
     }
 
     notifyListeners();
@@ -862,7 +969,7 @@ class AppState extends ChangeNotifier {
         _cart[index].quantity = quantity;
       }
 
-      // Save to local storage if user is logged in
+      // Save to local storage and Firestore if user is logged in
       if (_user != null) {
         _updateUserLocalData({
           'cart': _cart
@@ -874,6 +981,7 @@ class AppState extends ChangeNotifier {
                   })
               .toList(),
         });
+        _saveUserToFirestore(_user!);
       }
 
       notifyListeners();
@@ -892,11 +1000,12 @@ class AppState extends ChangeNotifier {
       _favorites.add(product);
     }
 
-    // Save to local storage if user is logged in
+    // Save to local storage and Firestore if user is logged in
     if (_user != null) {
       _updateUserLocalData({
         'favorites': _favorites.map((p) => p.id).toList(),
       });
+      _saveUserToFirestore(_user!);
     }
 
     notifyListeners();
@@ -917,7 +1026,7 @@ class AppState extends ChangeNotifier {
 
     _orders.insert(0, newOrder);
 
-    // Save orders to local storage if user is logged in
+    // Save orders to local storage and Firestore if user is logged in
     if (_user != null) {
       _updateUserLocalData({
         'orders': _orders
@@ -930,6 +1039,7 @@ class AppState extends ChangeNotifier {
                 })
             .toList(),
       });
+      _saveUserToFirestore(_user!);
     }
 
     _cart.clear();

@@ -5,6 +5,14 @@ import 'package:provider/provider.dart';
 import '../app_theme.dart';
 import '../providers/app_state.dart';
 
+// ─── Shared Palette (Matching Your App) ──────────────────────────────────────
+const _kPurple = Color(0xFF7457A2);
+const _kPurpleLight = Color(0xFF9B7BC8);
+const _kPurpleSoft = Color(0xFFEDE7F6);
+const _kGold = Color(0xFFF7C948);
+const _kWhite = Colors.white;
+const _kText = Color(0xFF2D1B4E);
+
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -67,7 +75,7 @@ class _SplashScreenState extends State<SplashScreen>
     );
 
     // Pulse animation for the icon (continuous)
-    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.08).animate(
       CurvedAnimation(
         parent: _animationController,
         curve: Curves.easeInOut,
@@ -102,14 +110,13 @@ class _SplashScreenState extends State<SplashScreen>
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Colors.blue.shade900,
-              Colors.purple.shade700,
-              Colors.pink.shade600,
-              Colors.purple.shade800,
-              Colors.blue.shade800,
+              _kPurple,
+              _kPurpleLight,
+              const Color(0xFFB8A9D4),
+              _kPurpleSoft,
+              _kPurple,
             ],
-            stops: const [0.0, 0.3, 0.6, 0.8, 1.0],
-            transform: const GradientRotation(45 * 3.14159 / 180),
+            stops: const [0.0, 0.3, 0.5, 0.7, 1.0],
           ),
         ),
         child: AnimatedBuilder(
@@ -138,13 +145,13 @@ class _SplashScreenState extends State<SplashScreen>
                                   shape: BoxShape.circle,
                                   gradient: LinearGradient(
                                     colors: [
-                                      Colors.white.withOpacity(0.3),
-                                      Colors.white.withOpacity(0.1),
+                                      _kWhite.withOpacity(0.3),
+                                      _kWhite.withOpacity(0.1),
                                     ],
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.white.withOpacity(0.3),
+                                      color: _kWhite.withOpacity(0.25),
                                       blurRadius: 30,
                                       spreadRadius: 10,
                                     ),
@@ -153,7 +160,7 @@ class _SplashScreenState extends State<SplashScreen>
                                 child: const Icon(
                                   Icons.local_florist,
                                   size: 80,
-                                  color: Colors.white,
+                                  color: _kWhite,
                                 ),
                               ),
                             );
@@ -168,25 +175,22 @@ class _SplashScreenState extends State<SplashScreen>
                       child: ShaderMask(
                         shaderCallback: (bounds) => LinearGradient(
                           colors: [
-                            Colors.white,
-                            Colors.white70,
-                            Colors.white,
-                            AppTheme.pinkContainer,
+                            _kWhite,
+                            _kWhite,
+                            _kGold,
+                            _kWhite,
                           ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ).createShader(bounds),
                         child: Text(
                           'BLOOMBASKET',
-                          style: Theme.of(context)
-                              .textTheme
-                              .displayLarge
-                              ?.copyWith(
-                                color: Colors.white,
-                                fontSize: isSmallScreen ? 28 : 36,
-                                letterSpacing: isSmallScreen ? 6 : 8,
-                                fontWeight: FontWeight.bold,
-                              ),
+                          style: TextStyle(
+                            fontSize: isSmallScreen ? 28 : 36,
+                            letterSpacing: isSmallScreen ? 6 : 8,
+                            fontWeight: FontWeight.bold,
+                            color: _kWhite,
+                          ),
                         ),
                       ),
                     ),
@@ -202,21 +206,20 @@ class _SplashScreenState extends State<SplashScreen>
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              Colors.white.withOpacity(0.2),
-                              Colors.white.withOpacity(0.1),
+                              _kWhite.withOpacity(0.2),
+                              _kWhite.withOpacity(0.1),
                             ],
                           ),
                           borderRadius: BorderRadius.circular(30),
                         ),
                         child: Text(
                           'BOTANICAL PRESTIGE',
-                          style:
-                              Theme.of(context).textTheme.labelLarge?.copyWith(
-                                    color: Colors.white.withOpacity(0.9),
-                                    letterSpacing: isSmallScreen ? 2 : 4,
-                                    fontSize: isSmallScreen ? 10 : 12,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                          style: TextStyle(
+                            color: _kWhite.withOpacity(0.9),
+                            letterSpacing: isSmallScreen ? 2 : 4,
+                            fontSize: isSmallScreen ? 10 : 12,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
@@ -230,7 +233,7 @@ class _SplashScreenState extends State<SplashScreen>
                         padding: const EdgeInsets.all(8),
                         child: const CircularProgressIndicator(
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.white,
+                            _kWhite,
                           ),
                           strokeWidth: 2,
                         ),
@@ -247,7 +250,7 @@ class _SplashScreenState extends State<SplashScreen>
   }
 }
 
-// Alternative version with more dynamic gradient animation
+// ─── Alternative Version with Dynamic Gradient Animation ─────────────────────
 class SplashScreenAnimated extends StatefulWidget {
   const SplashScreenAnimated({super.key});
 
@@ -342,13 +345,12 @@ class _SplashScreenAnimatedState extends State<SplashScreenAnimated>
                 begin: _gradientAnimation.value,
                 end: Alignment.center,
                 colors: [
-                  Colors.blue.shade900,
-                  Colors.purple.shade700,
-                  Colors.pink.shade600,
-                  Colors.cyan.shade700,
-                  Colors.indigo.shade900,
+                  _kPurple,
+                  _kPurpleLight,
+                  const Color(0xFFC4B5E0),
+                  _kPurpleSoft,
+                  _kPurple,
                 ],
-                stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
               ),
             ),
             child: Center(
@@ -366,13 +368,13 @@ class _SplashScreenAnimatedState extends State<SplashScreenAnimated>
                           shape: BoxShape.circle,
                           gradient: LinearGradient(
                             colors: [
-                              Colors.white.withOpacity(0.3),
-                              Colors.white.withOpacity(0.1),
+                              _kWhite.withOpacity(0.3),
+                              _kWhite.withOpacity(0.1),
                             ],
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.white.withOpacity(0.4),
+                              color: _kWhite.withOpacity(0.3),
                               blurRadius: 40,
                               spreadRadius: 15,
                             ),
@@ -387,7 +389,7 @@ class _SplashScreenAnimatedState extends State<SplashScreenAnimated>
                               child: const Icon(
                                 Icons.spa,
                                 size: 80,
-                                color: Colors.white,
+                                color: _kWhite,
                               ),
                             );
                           },
@@ -405,11 +407,11 @@ class _SplashScreenAnimatedState extends State<SplashScreenAnimated>
                             style: TextStyle(
                               fontSize: isSmallScreen ? 40 : 48,
                               fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                              color: _kWhite,
                               letterSpacing: 4,
                               shadows: [
                                 Shadow(
-                                  color: Colors.black.withOpacity(0.3),
+                                  color: _kPurple.withOpacity(0.5),
                                   blurRadius: 10,
                                   offset: const Offset(2, 2),
                                 ),
@@ -421,11 +423,11 @@ class _SplashScreenAnimatedState extends State<SplashScreenAnimated>
                             style: TextStyle(
                               fontSize: isSmallScreen ? 40 : 48,
                               fontWeight: FontWeight.bold,
-                              color: AppTheme.pinkContainer,
+                              color: _kGold,
                               letterSpacing: 4,
                               shadows: [
                                 Shadow(
-                                  color: Colors.black.withOpacity(0.3),
+                                  color: _kPurple.withOpacity(0.5),
                                   blurRadius: 10,
                                   offset: const Offset(2, 2),
                                 ),
@@ -447,9 +449,9 @@ class _SplashScreenAnimatedState extends State<SplashScreenAnimated>
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              Colors.white.withOpacity(0.2),
+                              _kWhite.withOpacity(0.2),
                               Colors.transparent,
-                              Colors.white.withOpacity(0.2),
+                              _kWhite.withOpacity(0.2),
                             ],
                           ),
                           borderRadius: BorderRadius.circular(30),
@@ -457,7 +459,7 @@ class _SplashScreenAnimatedState extends State<SplashScreenAnimated>
                         child: Text(
                           'BOTANICAL PRESTIGE',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.9),
+                            color: _kWhite.withOpacity(0.9),
                             letterSpacing: isSmallScreen ? 2 : 4,
                             fontSize: isSmallScreen ? 10 : 12,
                             fontWeight: FontWeight.w600,
@@ -485,7 +487,7 @@ class _SplashScreenAnimatedState extends State<SplashScreenAnimated>
                                   height: 8,
                                   decoration: const BoxDecoration(
                                     shape: BoxShape.circle,
-                                    color: Colors.white,
+                                    color: _kWhite,
                                   ),
                                 ),
                               ),

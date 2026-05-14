@@ -33,7 +33,7 @@ class BotanicalBottomNavBar extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border(
-          top: BorderSide(color: AppTheme.primaryGreen.withValues(alpha: 0.1), width: 1),
+          top: BorderSide(color: AppTheme.primaryGreen.withOpacity(0.1), width: 1),
         ),
       ),
       child: BottomNavigationBar(
@@ -42,7 +42,7 @@ class BotanicalBottomNavBar extends StatelessWidget {
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.white,
         selectedItemColor: AppTheme.primaryGreen,
-        unselectedItemColor: AppTheme.outline.withValues(alpha: 0.5),
+        unselectedItemColor: AppTheme.outline.withOpacity(0.5),
         showSelectedLabels: true,
         showUnselectedLabels: true,
         selectedLabelStyle: Theme.of(context).textTheme.labelLarge?.copyWith(fontSize: 10),

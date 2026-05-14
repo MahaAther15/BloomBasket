@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'cart_item.dart';
 
 enum OrderStatus {
+  pending,
   confirmed,
   prepared,
+  shipped,
   outForDelivery,
   delivered,
   cancelled,
@@ -14,10 +16,14 @@ enum OrderStatus {
 extension OrderStatusExtension on OrderStatus {
   String get displayText {
     switch (this) {
+      case OrderStatus.pending:
+        return 'PENDING';
       case OrderStatus.confirmed:
         return 'CONFIRMED';
       case OrderStatus.prepared:
         return 'PREPARED';
+      case OrderStatus.shipped:
+        return 'SHIPPED';
       case OrderStatus.outForDelivery:
         return 'OUT FOR DELIVERY';
       case OrderStatus.delivered:
@@ -29,10 +35,14 @@ extension OrderStatusExtension on OrderStatus {
 
   String get description {
     switch (this) {
+      case OrderStatus.pending:
+        return 'Your order is pending confirmation';
       case OrderStatus.confirmed:
         return 'Your order has been confirmed';
       case OrderStatus.prepared:
         return 'Your arrangement is being prepared with care';
+      case OrderStatus.shipped:
+        return 'Your order has been shipped';
       case OrderStatus.outForDelivery:
         return 'Your order is out for delivery';
       case OrderStatus.delivered:
@@ -44,12 +54,16 @@ extension OrderStatusExtension on OrderStatus {
 
   IconData get icon {
     switch (this) {
+      case OrderStatus.pending:
+        return Icons.pending_outlined;
       case OrderStatus.confirmed:
         return Icons.check_circle_outline;
       case OrderStatus.prepared:
         return Icons.spa;
-      case OrderStatus.outForDelivery:
+      case OrderStatus.shipped:
         return Icons.local_shipping;
+      case OrderStatus.outForDelivery:
+        return Icons.delivery_dining;
       case OrderStatus.delivered:
         return Icons.home;
       case OrderStatus.cancelled:
@@ -59,12 +73,16 @@ extension OrderStatusExtension on OrderStatus {
 
   Color get color {
     switch (this) {
-      case OrderStatus.confirmed:
-        return Colors.green;
-      case OrderStatus.prepared:
+      case OrderStatus.pending:
         return Colors.orange;
-      case OrderStatus.outForDelivery:
+      case OrderStatus.confirmed:
+        return Colors.purple;
+      case OrderStatus.prepared:
+        return Colors.amber;
+      case OrderStatus.shipped:
         return Colors.blue;
+      case OrderStatus.outForDelivery:
+        return Colors.indigo;
       case OrderStatus.delivered:
         return Colors.green;
       case OrderStatus.cancelled:
@@ -169,10 +187,14 @@ class BBOrder {
   // Helper method to parse order status from string
   static OrderStatus _parseOrderStatus(String status) {
     switch (status) {
+      case 'OrderStatus.pending':
+        return OrderStatus.pending;
       case 'OrderStatus.confirmed':
         return OrderStatus.confirmed;
       case 'OrderStatus.prepared':
         return OrderStatus.prepared;
+      case 'OrderStatus.shipped':
+        return OrderStatus.shipped;
       case 'OrderStatus.outForDelivery':
         return OrderStatus.outForDelivery;
       case 'OrderStatus.delivered':

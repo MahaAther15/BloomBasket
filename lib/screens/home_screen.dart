@@ -1,13 +1,23 @@
-import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import '../app_theme.dart';
 import '../providers/app_state.dart';
-import '../widgets/product_card.dart';
 import '../widgets/flower_button.dart';
-import '../widgets/bottom_nav_bar.dart';
 import '../widgets/image_fallback.dart';
+import '../models/product.dart';
+
+// ─── Palette ──────────────────────────────────────────────
+const _kPurple = Color(0xFF7B5EA7);
+const _kPurpleLight = Color(0xFFEDE7F6);
+const _kPurpleSoft = Color(0xFFF3EEFE);
+const _kAccent = Color(0xFF9C6FD6);
+const _kBg = Color(0xFFFAF8FF);
+const _kText = Color(0xFF2D1B4E);
+const _kTextSub = Color(0xFF8E7BAE);
+const _kGold = Color(0xFFF7C948);
+const _kWhite = Colors.white;
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -18,253 +28,855 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   String _selectedCategory = 'All';
+  final _searchController = TextEditingController();
 
-  @override
-  Widget build(BuildContext context) {
-    final appState = Provider.of<AppState>(context);
-    final screenSize = MediaQuery.of(context).size;
-    final isSmallScreen = screenSize.width < 600;
-    final isMediumScreen = screenSize.width >= 600 && screenSize.width < 900;
-    final isLargeScreen = screenSize.width >= 900;
-
-    final filteredProducts = _selectedCategory == 'All'
-        ? appState.products
-        : appState.products.where((p) => p.category == _selectedCategory).toList();
-
-    final double heroHeight = isSmallScreen ? 300.0 : (isMediumScreen ? 350.0 : 420.0);
-
-    Widget hero = SizedBox(
-      height: heroHeight,
-      width: double.infinity,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [AppTheme.pastelBg, Colors.white],
-              ),
-            ),
-            child: Image.asset(
-              'assets/images/blackrose.webp',
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => const ImageFallback(iconSize: 64),
-            ),
-          ),
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.bottomCenter,
-                end: Alignment.topCenter,
-                colors: [Colors.black.withOpacity(0.28), Colors.transparent],
-              ),
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.all(isSmallScreen ? 16 : 28),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.end,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Ephemeral\nBeauty',
-                  style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                        color: AppTheme.pastelText,
-                        fontSize: isSmallScreen ? 32 : (isMediumScreen ? 40 : 48),
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                SizedBox(height: isSmallScreen ? 8 : 12),
-                Text(
-                  'ARTISANAL ARRANGEMENTS FOR THE DISCERNING',
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: AppTheme.pastelText.withOpacity(0.7),
-                        letterSpacing: 1.2,
-                        fontSize: isSmallScreen ? 10 : 12,
-                      ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-
-    Widget content = SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 12),
-          _OffersSlider(height: isSmallScreen ? 150 : (isMediumScreen ? 180 : 200)),
-          const SizedBox(height: 20),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 16 : 24),
-            child: Text(
-              'COLLECTIONS',
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: AppTheme.richGold,
-                    letterSpacing: 2,
-                  ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            height: isSmallScreen ? 36 : 44,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 12 : 20),
-              children: ['All', 'Seasonal', 'Boutique', 'Artisanal'].map((cat) {
-                return GestureDetector(
-                  onTap: () => setState(() => _selectedCategory = cat),
-                  child: _CategoryChip(label: cat, isActive: _selectedCategory == cat, isSmallScreen: isSmallScreen),
-                );
-              }).toList(),
-            ),
-          ),
-          const SizedBox(height: 20),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 12 : 20),
-            child: LayoutBuilder(builder: (context, constraints) {
-              int crossAxisCount = 2;
-              if (constraints.maxWidth > 1200) crossAxisCount = 5;
-              else if (constraints.maxWidth > 900) crossAxisCount = 4;
-              else if (constraints.maxWidth > 600) crossAxisCount = 3;
-
-              return GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: crossAxisCount,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 20,
-                  childAspectRatio: 0.66,
-                ),
-                itemCount: filteredProducts.length,
-                itemBuilder: (context, index) {
-                  final product = filteredProducts[index];
-                  return ProductCard(product: product, onTap: () => context.push('/product/${product.id}'));
-                },
-              );
-            }),
-          ),
-          const SizedBox(height: 28),
-        ],
-      ),
-    );
-
-    return Scaffold(
-      backgroundColor: AppTheme.pastelBg,
-      floatingActionButton: kDebugMode
-          ? FlowerButton(size: 64, assetImage: 'assets/images/flower1.jfif', onPressed: () => context.go('/admin'))
-          : null,
-      appBar: AppBar(
-        title: Text(
-          isSmallScreen ? 'FLORAL ATELIER' : 'THE FLORAL ATELIER',
-          style: Theme.of(context).textTheme.labelLarge?.copyWith(letterSpacing: isSmallScreen ? 2 : 4, fontWeight: FontWeight.w700),
-        ),
-        backgroundColor: AppTheme.pastelBg,
-        elevation: 0,
-        actions: [
-          IconButton(icon: const Icon(Icons.shopping_bag_outlined), onPressed: () => context.push('/cart')),
-          if (kDebugMode)
-            IconButton(icon: const Icon(Icons.admin_panel_settings), tooltip: 'Admin (debug)', onPressed: () => context.go('/admin')),
-          IconButton(
-            icon: const Icon(Icons.logout_rounded),
-            onPressed: () async {
-              final appState = Provider.of<AppState>(context, listen: false);
-              await appState.signOut();
-              if (context.mounted) context.go('/signin');
-            },
-          ),
-        ],
-      ),
-      bottomNavigationBar: const BotanicalBottomNavBar(currentIndex: 0),
-      body: isLargeScreen
-          ? Row(
-              children: [
-                Expanded(flex: 4, child: hero),
-                Expanded(flex: 6, child: Padding(padding: const EdgeInsets.all(16.0), child: content)),
-              ],
-            )
-          : SingleChildScrollView(child: Column(children: [hero, const SizedBox(height: 12), content])),
-    );
-  }
-}
-
-class _CategoryChip extends StatelessWidget {
-  final String label;
-  final bool isActive;
-  final bool isSmallScreen;
-
-  const _CategoryChip({required this.label, this.isActive = false, this.isSmallScreen = false});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.only(right: isSmallScreen ? 8 : 12),
-      padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 12 : 18, vertical: isSmallScreen ? 6 : 10),
-      decoration: BoxDecoration(
-        color: isActive ? AppTheme.primaryGreen : Colors.transparent,
-        border: Border.all(color: isActive ? AppTheme.primaryGreen : AppTheme.outline.withOpacity(0.3)),
-        borderRadius: BorderRadius.circular(9999),
-      ),
-      child: Center(
-        child: Text(label.toUpperCase(), style: Theme.of(context).textTheme.labelLarge?.copyWith(color: isActive ? Colors.white : AppTheme.primaryGreen)),
-      ),
-    );
-  }
-}
-
-class _OffersSlider extends StatefulWidget {
-  final double height;
-  const _OffersSlider({this.height = 180, super.key});
-
-  @override
-  State<_OffersSlider> createState() => _OffersSliderState();
-}
-
-class _OffersSliderState extends State<_OffersSlider> {
-  late final PageController _controller;
-  int _page = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = PageController();
-  }
+  final List<String> _categories = [
+    'All',
+    'Jasmine',
+    'Rose',
+    'Daisy',
+    'Tulip',
+  ];
 
   @override
   void dispose() {
-    _controller.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final images = [
-      'assets/images/offer1.webp',
-      'assets/images/offer2.webp',
-      'assets/images/offer3.webp',
-      'assets/images/offer4.webp',
-    ];
+    final appState = Provider.of<AppState>(context);
+    final filteredProducts = _selectedCategory == 'All'
+        ? appState.products
+        : appState.products.where((p) {
+            final cat = _selectedCategory.toLowerCase();
+            return p.category.toLowerCase().contains(cat) ||
+                p.name.toLowerCase().contains(cat) ||
+                p.tags.any((t) => t.toLowerCase().contains(cat));
+          }).toList();
 
-    return SizedBox(
-      height: widget.height,
-      child: PageView.builder(
-        controller: _controller,
-        itemCount: images.length,
-        onPageChanged: (i) => setState(() => _page = i),
-        itemBuilder: (context, index) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: Image.asset(images[index], fit: BoxFit.cover, errorBuilder: (c, e, s) => Container(color: Colors.grey[300])),
+    return Scaffold(
+      backgroundColor: _kBg,
+      floatingActionButton: kDebugMode
+          ? FlowerButton(
+              size: 56,
+              assetImage: 'assets/images/flower1.jfif',
+              onPressed: () => context.go('/admin'),
+            )
+          : null,
+      bottomNavigationBar: const _BloomBottomNav(currentIndex: 0),
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            // Responsive scaling factor based on screen width
+            final screenWidth = MediaQuery.of(context).size.width;
+            final scaleFactor = (screenWidth / 375).clamp(0.8, 1.2);
+
+            return SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: IntrinsicHeight(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildHeader(appState, scaleFactor),
+                      _buildSearchBar(scaleFactor),
+                      _buildOfferBanner(scaleFactor),
+                      _buildCategoriesSection(scaleFactor),
+                      _buildTrendingSection(filteredProducts, scaleFactor),
+                      _buildOccasionSection(appState.products, scaleFactor),
+                      const SizedBox(height: 24),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  // ── Header (Responsive) ──────────────────────────────────────────────
+  Widget _buildHeader(AppState appState, double scaleFactor) {
+    final user = appState.user;
+    final name = user?.displayName ?? user?.email?.split('@').first ?? 'Guest';
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+          20 * scaleFactor, 16 * scaleFactor, 20 * scaleFactor, 0),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Location',
+                  style: TextStyle(
+                    fontSize: 11 * scaleFactor,
+                    color: _kTextSub,
+                    fontFamily: 'sans-serif',
+                  ),
+                ),
+                SizedBox(height: 2 * scaleFactor),
+                Row(
+                  children: [
+                    Icon(Icons.location_on,
+                        size: 14 * scaleFactor, color: _kPurple),
+                    SizedBox(width: 3 * scaleFactor),
+                    Text(
+                      'Rabat, Morocco ▾',
+                      style: TextStyle(
+                        fontSize: 13 * scaleFactor,
+                        fontWeight: FontWeight.w600,
+                        color: _kText,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          );
-        },
+          ),
+          GestureDetector(
+            onTap: () => context.go('/profile'),
+            child: Container(
+              width: 40 * scaleFactor,
+              height: 40 * scaleFactor,
+              decoration: BoxDecoration(
+                color: _kPurpleLight,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.favorite_border,
+                  color: _kPurple, size: 20 * scaleFactor),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Search (Responsive) ──────────────────────────────────────────────
+  Widget _buildSearchBar(double scaleFactor) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+          20 * scaleFactor, 14 * scaleFactor, 20 * scaleFactor, 0),
+      child: Container(
+        height: 48 * scaleFactor,
+        decoration: BoxDecoration(
+          color: _kWhite,
+          borderRadius: BorderRadius.circular(24 * scaleFactor),
+          boxShadow: [
+            BoxShadow(
+              color: _kPurple.withOpacity(0.08),
+              blurRadius: 16 * scaleFactor,
+              offset: Offset(0, 4 * scaleFactor),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            SizedBox(width: 16 * scaleFactor),
+            Icon(Icons.search, color: _kTextSub, size: 20 * scaleFactor),
+            SizedBox(width: 10 * scaleFactor),
+            Expanded(
+              child: TextField(
+                controller: _searchController,
+                style: TextStyle(
+                  fontSize: 14 * scaleFactor,
+                  color: _kText,
+                ),
+                decoration: InputDecoration(
+                  hintText: 'Search',
+                  hintStyle:
+                      TextStyle(color: _kTextSub, fontSize: 14 * scaleFactor),
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  isDense: true,
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+            ),
+            Container(
+              width: 36 * scaleFactor,
+              height: 36 * scaleFactor,
+              margin: EdgeInsets.only(right: 6 * scaleFactor),
+              decoration: BoxDecoration(
+                color: _kPurple,
+                borderRadius: BorderRadius.circular(18 * scaleFactor),
+              ),
+              child: Icon(Icons.mic, color: _kWhite, size: 18 * scaleFactor),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Offer Banner (Responsive) ─────────────────────────────────────────
+  Widget _buildOfferBanner(double scaleFactor) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+          20 * scaleFactor, 18 * scaleFactor, 20 * scaleFactor, 0),
+      child: _OfferBannerSlider(scaleFactor: scaleFactor),
+    );
+  }
+
+  // ── Categories (Responsive) ───────────────────────────────────────────
+  Widget _buildCategoriesSection(double scaleFactor) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.fromLTRB(20 * scaleFactor, 20 * scaleFactor,
+              20 * scaleFactor, 12 * scaleFactor),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Categories',
+                style: TextStyle(
+                  fontSize: 16 * scaleFactor,
+                  fontWeight: FontWeight.w700,
+                  color: _kText,
+                ),
+              ),
+              GestureDetector(
+                onTap: () => context.go('/discovery'),
+                child: Text(
+                  'See All',
+                  style: TextStyle(
+                    fontSize: 13 * scaleFactor,
+                    color: _kPurple,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(
+          height: 40 * scaleFactor,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: EdgeInsets.symmetric(horizontal: 20 * scaleFactor),
+            itemCount: _categories.length,
+            itemBuilder: (context, i) {
+              final cat = _categories[i];
+              final isActive = _selectedCategory == cat;
+              return GestureDetector(
+                onTap: () => setState(() => _selectedCategory = cat),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  margin: EdgeInsets.only(right: 10 * scaleFactor),
+                  padding: EdgeInsets.symmetric(horizontal: 18 * scaleFactor),
+                  decoration: BoxDecoration(
+                    color: isActive ? _kPurple : _kWhite,
+                    borderRadius: BorderRadius.circular(20 * scaleFactor),
+                    border: Border.all(
+                      color: isActive ? _kPurple : _kPurple.withOpacity(0.25),
+                    ),
+                    boxShadow: isActive
+                        ? [
+                            BoxShadow(
+                              color: _kPurple.withOpacity(0.3),
+                              blurRadius: 10 * scaleFactor,
+                              offset: Offset(0, 4 * scaleFactor),
+                            )
+                          ]
+                        : [],
+                  ),
+                  child: Center(
+                    child: Text(
+                      cat,
+                      style: TextStyle(
+                        fontSize: 13 * scaleFactor,
+                        fontWeight: FontWeight.w600,
+                        color: isActive ? _kWhite : _kTextSub,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Trending Section (Responsive) ─────────────────────────────────────
+  Widget _buildTrendingSection(List<Product> products, double scaleFactor) {
+    final cardWidth = 140 * scaleFactor;
+    final cardMargin = 14 * scaleFactor;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.fromLTRB(20 * scaleFactor, 22 * scaleFactor,
+              20 * scaleFactor, 14 * scaleFactor),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Trending Now',
+                style: TextStyle(
+                  fontSize: 16 * scaleFactor,
+                  fontWeight: FontWeight.w700,
+                  color: _kText,
+                ),
+              ),
+              GestureDetector(
+                onTap: () => context.go('/discovery'),
+                child: Text(
+                  'See All',
+                  style: TextStyle(
+                    fontSize: 13 * scaleFactor,
+                    color: _kPurple,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(
+          height: 200 * scaleFactor,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: EdgeInsets.symmetric(horizontal: 20 * scaleFactor),
+            itemCount: products.length > 8 ? 8 : products.length,
+            itemBuilder: (context, i) {
+              final product = products[i];
+              return _TrendingCard(
+                product: product,
+                scaleFactor: scaleFactor,
+                onTap: () => context.push('/product/${product.id}'),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Occasion Section (Responsive) ─────────────────────────────────────
+  Widget _buildOccasionSection(List<Product> products, double scaleFactor) {
+    final ocProducts = products.length > 8
+        ? products.sublist(8, products.length > 16 ? 16 : products.length)
+        : products;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.fromLTRB(20 * scaleFactor, 22 * scaleFactor,
+              20 * scaleFactor, 14 * scaleFactor),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Occasion Picks',
+                style: TextStyle(
+                  fontSize: 16 * scaleFactor,
+                  fontWeight: FontWeight.w700,
+                  color: _kText,
+                ),
+              ),
+              GestureDetector(
+                onTap: () => context.go('/discovery'),
+                child: Text(
+                  'See All',
+                  style: TextStyle(
+                    fontSize: 13 * scaleFactor,
+                    color: _kPurple,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(
+          height: 200 * scaleFactor,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: EdgeInsets.symmetric(horizontal: 20 * scaleFactor),
+            itemCount: ocProducts.length > 8 ? 8 : ocProducts.length,
+            itemBuilder: (context, i) {
+              final product = ocProducts[i];
+              return _TrendingCard(
+                product: product,
+                scaleFactor: scaleFactor,
+                onTap: () => context.push('/product/${product.id}'),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Offer Banner Slider (Responsive) ───────────────────────────────────
+class _OfferBannerSlider extends StatefulWidget {
+  final double scaleFactor;
+  const _OfferBannerSlider({required this.scaleFactor});
+
+  @override
+  State<_OfferBannerSlider> createState() => _OfferBannerSliderState();
+}
+
+class _OfferBannerSliderState extends State<_OfferBannerSlider> {
+  final _pageController = PageController();
+  int _page = 0;
+  Timer? _timer;
+
+  final List<_BannerData> _banners = const [
+    _BannerData(
+      label: 'Special Offers',
+      headline: 'Get 40% Off Discount',
+      buttonText: 'Get Now',
+      image: 'assets/images/offer1.png',
+      gradientStart: Color(0xFF9C6FD6),
+      gradientEnd: Color(0xFF6A3DAB),
+    ),
+    _BannerData(
+      label: 'New Arrivals',
+      headline: 'Fresh Spring Collection',
+      buttonText: 'Shop Now',
+      image: 'assets/images/offer2.png',
+      gradientStart: Color(0xFF7B5EA7),
+      gradientEnd: Color(0xFF4A2D88),
+    ),
+    _BannerData(
+      label: 'Limited Deal',
+      headline: 'Get 25% Off Today',
+      buttonText: 'Grab Deal',
+      image: 'assets/images/offer3.png',
+      gradientStart: Color(0xFFA67DD6),
+      gradientEnd: Color(0xFF7B4FA7),
+    ),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 3), (_) {
+      if (_page < _banners.length - 1) {
+        _page++;
+      } else {
+        _page = 0;
+      }
+      if (_pageController.hasClients) {
+        _pageController.animateToPage(
+          _page,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        SizedBox(
+          height: 160 * widget.scaleFactor,
+          child: PageView.builder(
+            controller: _pageController,
+            onPageChanged: (i) => setState(() => _page = i),
+            itemCount: _banners.length,
+            itemBuilder: (context, i) {
+              final b = _banners[i];
+              return _BannerCard(data: b, scaleFactor: widget.scaleFactor);
+            },
+          ),
+        ),
+        SizedBox(height: 10 * widget.scaleFactor),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(
+            _banners.length,
+            (i) => AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              margin: EdgeInsets.symmetric(horizontal: 3 * widget.scaleFactor),
+              width:
+                  _page == i ? 20 * widget.scaleFactor : 6 * widget.scaleFactor,
+              height: 6 * widget.scaleFactor,
+              decoration: BoxDecoration(
+                color: _page == i ? _kPurple : _kPurple.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(3 * widget.scaleFactor),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+@immutable
+class _BannerData {
+  final String label;
+  final String headline;
+  final String buttonText;
+  final String image;
+  final Color gradientStart;
+  final Color gradientEnd;
+
+  const _BannerData({
+    required this.label,
+    required this.headline,
+    required this.buttonText,
+    required this.image,
+    required this.gradientStart,
+    required this.gradientEnd,
+  });
+}
+
+class _BannerCard extends StatelessWidget {
+  final _BannerData data;
+  final double scaleFactor;
+  const _BannerCard({required this.data, required this.scaleFactor});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20 * scaleFactor),
+        gradient: LinearGradient(
+          colors: [data.gradientStart, data.gradientEnd],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: data.gradientEnd.withOpacity(0.4),
+            blurRadius: 20 * scaleFactor,
+            offset: Offset(0, 8 * scaleFactor),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            top: -20 * scaleFactor,
+            right: 80 * scaleFactor,
+            child: Container(
+              width: 100 * scaleFactor,
+              height: 100 * scaleFactor,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.06),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: -30 * scaleFactor,
+            left: -20 * scaleFactor,
+            child: Container(
+              width: 120 * scaleFactor,
+              height: 120 * scaleFactor,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.06),
+              ),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.symmetric(
+                horizontal: 20 * scaleFactor, vertical: 16 * scaleFactor),
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 5,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 10 * scaleFactor,
+                            vertical: 4 * scaleFactor),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.22),
+                          borderRadius: BorderRadius.circular(12 * scaleFactor),
+                        ),
+                        child: Text(
+                          data.label,
+                          style: TextStyle(
+                            fontSize: 10 * scaleFactor,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 8 * scaleFactor),
+                      Text(
+                        data.headline,
+                        style: TextStyle(
+                          fontSize: 18 * scaleFactor,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          height: 1.2,
+                        ),
+                      ),
+                      SizedBox(height: 12 * scaleFactor),
+                      ElevatedButton(
+                        onPressed: () {},
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: _kPurple,
+                          elevation: 0,
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 16 * scaleFactor,
+                              vertical: 8 * scaleFactor),
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(20 * scaleFactor),
+                          ),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              data.buttonText,
+                              style: TextStyle(
+                                fontSize: 12 * scaleFactor,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            SizedBox(width: 4 * scaleFactor),
+                            Icon(Icons.arrow_forward, size: 12 * scaleFactor),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(width: 8 * scaleFactor),
+                Expanded(
+                  flex: 4,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(14 * scaleFactor),
+                    child: SizedBox(
+                      height: 130 * scaleFactor,
+                      child: Image.asset(
+                        data.image,
+                        fit: BoxFit.cover,
+                        errorBuilder: (c, e, s) => Container(
+                          color: Colors.white.withOpacity(0.2),
+                          child: Icon(Icons.local_florist,
+                              color: Colors.white54, size: 40 * scaleFactor),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Trending Card (Responsive) ─────────────────────────────────────────
+class _TrendingCard extends StatelessWidget {
+  final Product product;
+  final VoidCallback onTap;
+  final double scaleFactor;
+
+  const _TrendingCard({
+    required this.product,
+    required this.onTap,
+    required this.scaleFactor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 140 * scaleFactor,
+        margin: EdgeInsets.only(right: 14 * scaleFactor),
+        decoration: BoxDecoration(
+          color: _kWhite,
+          borderRadius: BorderRadius.circular(16 * scaleFactor),
+          boxShadow: [
+            BoxShadow(
+              color: _kPurple.withOpacity(0.1),
+              blurRadius: 14 * scaleFactor,
+              offset: Offset(0, 4 * scaleFactor),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(16 * scaleFactor)),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Container(color: _kPurpleSoft),
+                    product.imageUrl.startsWith('assets/')
+                        ? Image.asset(
+                            product.imageUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (c, e, s) =>
+                                ImageFallback(iconSize: 32 * scaleFactor),
+                          )
+                        : ImageFallback(iconSize: 32 * scaleFactor),
+                    Positioned(
+                      top: 8 * scaleFactor,
+                      right: 8 * scaleFactor,
+                      child: Container(
+                        width: 28 * scaleFactor,
+                        height: 28 * scaleFactor,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.9),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.favorite_border,
+                            color: _kPurple, size: 14 * scaleFactor),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(10 * scaleFactor, 8 * scaleFactor,
+                  10 * scaleFactor, 10 * scaleFactor),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    product.name,
+                    style: TextStyle(
+                      fontSize: 12 * scaleFactor,
+                      fontWeight: FontWeight.w600,
+                      color: _kText,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 3 * scaleFactor),
+                  Text(
+                    '\$${product.price.toStringAsFixed(0)}',
+                    style: TextStyle(
+                      fontSize: 13 * scaleFactor,
+                      fontWeight: FontWeight.w700,
+                      color: _kPurple,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Bottom Nav Bar (Responsive) ────────────────────────────────────────
+class _BloomBottomNav extends StatelessWidget {
+  final int currentIndex;
+  const _BloomBottomNav({required this.currentIndex});
+
+  void _onTap(BuildContext context, int index) {
+    switch (index) {
+      case 0:
+        context.go('/');
+        break;
+      case 1:
+        context.go('/discovery');
+        break;
+      case 2:
+        context.go('/cart');
+        break;
+      case 3:
+        context.go('/profile');
+        break;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scaleFactor = MediaQuery.of(context).size.width / 375;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: _kWhite,
+        boxShadow: [
+          BoxShadow(
+            color: _kPurple.withOpacity(0.12),
+            blurRadius: 20 * scaleFactor,
+            offset: Offset(0, -4 * scaleFactor),
+          ),
+        ],
+      ),
+      child: BottomNavigationBar(
+        currentIndex: currentIndex,
+        onTap: (i) => _onTap(context, i),
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: _kWhite,
+        selectedItemColor: _kPurple,
+        unselectedItemColor: _kTextSub,
+        showSelectedLabels: true,
+        showUnselectedLabels: true,
+        selectedLabelStyle: TextStyle(
+          fontSize: 10 * scaleFactor,
+          fontWeight: FontWeight.w600,
+        ),
+        unselectedLabelStyle: TextStyle(
+          fontSize: 10 * scaleFactor,
+          fontWeight: FontWeight.w500,
+        ),
+        elevation: 0,
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined, size: 24 * scaleFactor),
+            activeIcon: Icon(Icons.home_rounded, size: 24 * scaleFactor),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.search, size: 24 * scaleFactor),
+            activeIcon: Icon(Icons.search, size: 24 * scaleFactor),
+            label: 'Search',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.shopping_cart_outlined, size: 24 * scaleFactor),
+            activeIcon:
+                Icon(Icons.shopping_cart_rounded, size: 24 * scaleFactor),
+            label: 'Cart',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline, size: 24 * scaleFactor),
+            activeIcon: Icon(Icons.person, size: 24 * scaleFactor),
+            label: 'Profile',
+          ),
+        ],
       ),
     );
   }

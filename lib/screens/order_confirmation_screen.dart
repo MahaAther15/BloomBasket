@@ -4,6 +4,17 @@ import 'dart:math';
 import '../app_theme.dart';
 import '../widgets/primary_button.dart';
 
+// ─── Shared Palette (Matching Your App) ──────────────────────────────────────
+const _kPurple = Color(0xFF7457A2);
+const _kPurpleLight = Color(0xFF9B7BC8);
+const _kPurpleSoft = Color(0xFFEDE7F6);
+const _kBg = Color(0xFFFAF8FF);
+const _kWhite = Colors.white;
+const _kText = Color(0xFF2D1B4E);
+const _kTextSub = Color(0xFF8E7BAE);
+const _kGold = Color(0xFFF7C948);
+const _kGreen = Color(0xFF4CAF50);
+
 class OrderConfirmationScreen extends StatefulWidget {
   const OrderConfirmationScreen({super.key});
 
@@ -30,7 +41,6 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
       vsync: this,
     );
 
-    // Fade animation for the entire screen
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _animationController,
@@ -38,7 +48,6 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
       ),
     );
 
-    // Scale animation for the icon (pop effect)
     _iconScaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _animationController,
@@ -46,7 +55,6 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
       ),
     );
 
-    // Scale animation for the main container
     _scaleAnimation = Tween<double>(begin: 0.9, end: 1.0).animate(
       CurvedAnimation(
         parent: _animationController,
@@ -54,7 +62,6 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
       ),
     );
 
-    // Slide animation for the summary container
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.5),
       end: Offset.zero,
@@ -65,7 +72,6 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
       ),
     );
 
-    // Button animation
     _buttonAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _animationController,
@@ -73,7 +79,6 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
       ),
     );
 
-    // Confetti-like particles animation
     _confettiAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _animationController,
@@ -96,7 +101,7 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
     final isSmallScreen = screenSize.width < 600;
 
     return Scaffold(
-      backgroundColor: AppTheme.alabaster,
+      backgroundColor: _kBg,
       body: Stack(
         children: [
           // Background gradient
@@ -106,8 +111,8 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  AppTheme.alabaster,
-                  AppTheme.pinkContainer.withOpacity(0.2),
+                  _kBg,
+                  _kPurpleSoft.withOpacity(0.3),
                 ],
               ),
             ),
@@ -142,18 +147,15 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
                                 height: 140,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: AppTheme.primaryGreen.withOpacity(0.1),
+                                  color: _kPurple.withOpacity(0.1),
                                 ),
                               ),
                             );
                           },
                           onEnd: () {
-                            // Loop the animation
                             Future.delayed(const Duration(milliseconds: 500),
                                 () {
-                              if (mounted) {
-                                setState(() {});
-                              }
+                              if (mounted) setState(() {});
                             });
                           },
                         ),
@@ -164,15 +166,14 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
                             padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              gradient: LinearGradient(
-                                colors: [
-                                  AppTheme.primaryGreen,
-                                  AppTheme.primaryContainer,
-                                ],
+                              gradient: const LinearGradient(
+                                colors: [_kPurple, _kPurpleLight],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppTheme.primaryGreen.withOpacity(0.3),
+                                  color: _kPurple.withOpacity(0.3),
                                   blurRadius: 30,
                                   spreadRadius: 5,
                                 ),
@@ -181,7 +182,7 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
                             child: const Icon(
                               Icons.check,
                               size: 80,
-                              color: Colors.white,
+                              color: _kWhite,
                             ),
                           ),
                         ),
@@ -192,26 +193,19 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
                     ScaleTransition(
                       scale: _scaleAnimation,
                       child: ShaderMask(
-                        shaderCallback: (bounds) => LinearGradient(
-                          colors: [
-                            AppTheme.primaryGreen,
-                            AppTheme.richGold,
-                          ],
+                        shaderCallback: (bounds) => const LinearGradient(
+                          colors: [_kPurple, _kGold],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ).createShader(bounds),
-                        child: AnimatedDefaultTextStyle(
-                          duration: const Duration(milliseconds: 500),
-                          style: Theme.of(context)
-                              .textTheme
-                              .headlineMedium
-                              ?.copyWith(
-                                letterSpacing: 4,
-                                fontSize: isSmallScreen ? 20 : 24,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ) ?? const TextStyle(),
-                          child: const Text('ORDER CONFIRMED'),
+                        child: Text(
+                          'ORDER CONFIRMED',
+                          style: TextStyle(
+                            letterSpacing: 4,
+                            fontSize: isSmallScreen ? 20 : 24,
+                            fontWeight: FontWeight.bold,
+                            color: _kWhite,
+                          ),
                         ),
                       ),
                     ),
@@ -228,14 +222,12 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
                           child: Text(
                             'THANK YOU FOR YOUR PURCHASE. YOUR BOTANICAL ARRANGEMENT IS BEING PREPARED WITH CARE.',
                             textAlign: TextAlign.center,
-                            style: Theme.of(context)
-                                .textTheme
-                                .labelLarge
-                                ?.copyWith(
-                                  color: AppTheme.outline,
-                                  height: 1.8,
-                                  fontSize: isSmallScreen ? 11 : 12,
-                                ),
+                            style: TextStyle(
+                              color: _kTextSub,
+                              height: 1.8,
+                              fontSize: isSmallScreen ? 11 : 12,
+                              letterSpacing: 0.5,
+                            ),
                           ),
                         ),
                       ),
@@ -258,18 +250,18 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
-                                  Colors.white,
-                                  AppTheme.pinkContainer.withOpacity(0.1),
+                                  _kWhite,
+                                  _kPurpleSoft.withOpacity(0.3),
                                 ],
                               ),
                               border: Border.all(
-                                color: AppTheme.richGold.withOpacity(0.2),
+                                color: _kGold.withOpacity(0.2),
                                 width: 1,
                               ),
-                              borderRadius: BorderRadius.circular(16),
+                              borderRadius: BorderRadius.circular(20),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
+                                  color: _kPurple.withOpacity(0.08),
                                   blurRadius: 20,
                                   offset: const Offset(0, 8),
                                 ),
@@ -331,14 +323,12 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
                               },
                               child: Text(
                                 'BACK TO HOME',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelLarge
-                                    ?.copyWith(
-                                      color: AppTheme.primaryGreen,
-                                      letterSpacing: 2,
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                                style: TextStyle(
+                                  color: _kPurple,
+                                  letterSpacing: 2,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                           ),
@@ -359,17 +349,17 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
   List<Widget> _buildConfettiParticles(bool isSmallScreen) {
     List<Widget> particles = [];
     final colors = [
-      AppTheme.primaryGreen,
-      AppTheme.richGold,
-      AppTheme.pinkContainer,
-      Colors.orangeAccent,
-      Colors.purpleAccent,
+      _kPurple,
+      _kGold,
+      const Color(0xFF9B7BC8),
+      const Color(0xFFE8D5F5),
+      _kPurpleLight,
     ];
 
-    for (int i = 0; i < 30; i++) {
-      final delay = (i * 0.03);
-      final startPosition = (i % 360) * (3.14159 / 180);
-      final radius = 200.0 + (i % 100);
+    for (int i = 0; i < 40; i++) {
+      final delay = (i * 0.025);
+      final startPosition = (i * 37 % 360) * (3.14159 / 180);
+      final radius = 180.0 + (i % 80);
 
       particles.add(
         TweenAnimationBuilder(
@@ -386,12 +376,12 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
               left: MediaQuery.of(context).size.width / 2 + x * progress,
               top: -50 + y * progress,
               child: Opacity(
-                opacity: 1 - progress,
+                opacity: 1 - progress * 1.2,
                 child: Transform.rotate(
-                  angle: progress * 10,
+                  angle: progress * 15,
                   child: Container(
-                    width: isSmallScreen ? 6 : 8,
-                    height: isSmallScreen ? 6 : 8,
+                    width: isSmallScreen ? 5 : 7,
+                    height: isSmallScreen ? 5 : 7,
                     decoration: BoxDecoration(
                       color: colors[i % colors.length],
                       shape: BoxShape.circle,
@@ -412,8 +402,6 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
       context,
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) {
-          // You'll need to import the target screen or use go_router
-          // For now using go_router
           WidgetsBinding.instance.addPostFrameCallback((_) {
             context.go(route);
           });
@@ -436,6 +424,7 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
   }
 }
 
+// ─── Animated Summary Row ─────────────────────────────────────────────────────
 class _AnimatedSummaryRow extends StatelessWidget {
   final String label;
   final String value;
@@ -466,18 +455,19 @@ class _AnimatedSummaryRow extends StatelessWidget {
         children: [
           Text(
             label,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  fontSize: 10,
-                  color: AppTheme.outline,
-                  letterSpacing: 1,
-                ),
+            style: TextStyle(
+              fontSize: 10,
+              color: _kTextSub,
+              letterSpacing: 1,
+              fontWeight: FontWeight.w600,
+            ),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  AppTheme.primaryGreen.withOpacity(0.1),
+                  _kPurple.withOpacity(0.08),
                   Colors.transparent,
                 ],
               ),
@@ -485,10 +475,11 @@ class _AnimatedSummaryRow extends StatelessWidget {
             ),
             child: Text(
               value,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.primaryGreen,
-                  ),
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                color: _kPurple,
+                fontSize: 13,
+              ),
             ),
           ),
         ],
@@ -497,7 +488,7 @@ class _AnimatedSummaryRow extends StatelessWidget {
   }
 }
 
-// Optional: Add a Confetti Widget for more celebration effect
+// ─── Optional: Confetti Widget for more celebration effect ───────────────────
 class ConfettiWidget extends StatefulWidget {
   final Animation<double> animation;
 
@@ -581,11 +572,11 @@ class ConfettiParticle {
         velocityY = 2 + (DateTime.now().millisecondsSinceEpoch % 100) / 50,
         size = 4 + (DateTime.now().millisecondsSinceEpoch % 8),
         color = [
-          AppTheme.primaryGreen,
-          AppTheme.richGold,
-          Colors.pink,
-          Colors.orange,
-          Colors.purple,
+          _kPurple,
+          _kGold,
+          Colors.pink.shade300,
+          const Color(0xFF9B7BC8),
+          _kPurpleLight,
         ][DateTime.now().millisecondsSinceEpoch % 5],
         shape = BoxShape.circle,
         rotation = 0;

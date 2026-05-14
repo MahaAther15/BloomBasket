@@ -186,7 +186,7 @@ class _ProductCardState extends State<ProductCard>
           Text(
             '\$${product.price.toStringAsFixed(0)}',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppTheme.primaryGreen.withValues(alpha: 0.7),
+              color: AppTheme.primaryGreen.withOpacity(0.7),
             ),
           ),
         ],
