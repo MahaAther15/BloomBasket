@@ -1,7 +1,7 @@
 plugins {
     id("com.android.application")
     id("kotlin-android")
-    // 1. Google Services plugin yahan hona chahiye
+    id("dev.flutter.flutter-gradle-plugin")
     id("com.google.gms.google-services") 
 }
 
@@ -10,8 +10,8 @@ android {
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.yourapp" // Ye Firebase console se match hona chahiye
-        minSdk = 23 // Firebase ke liye kam az kam 21-23 behtar hai
+        applicationId = "com.example.yourapp" 
+        minSdk = flutter.minSdkVersion 
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -44,4 +44,8 @@ dependencies {
 
     // 4. Google Sign-In ke liye zaroori library
     implementation("com.google.android.gms:play-services-auth:20.7.0")
+}
+
+flutter {
+    source = "../.."
 }
