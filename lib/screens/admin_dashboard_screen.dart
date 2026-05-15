@@ -1,347 +1,348 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:lottie/lottie.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/app_state.dart';
 import '../models/order.dart';
+import '../models/product.dart';
 
-// ─── Shared Palette (Matching Home Screen) ──────────────────────────────────
-const _kPurple = Color(0xFF7457A2);
-const _kPurpleLight = Color(0xFFEDE7F6);
-const _kPurpleSoft = Color(0xFFF3EEFE);
-const _kBg = Color(0xFFFAF8FF);
-const _kWhite = Colors.white;
-const _kText = Color(0xFF2D1B4E);
-const _kTextSub = Color(0xFF8E7BAE);
-const _kGold = Color(0xFFF7C948);
-const _kGreen = Color(0xFF4CAF50);
-const _kOrange = Color(0xFFFF9800);
-const _kRed = Color(0xFFE57373);
-
-class AdminDashboardScreen extends StatelessWidget {
+class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
 
-  static const Color darkBg = Color(0xFF0D0D0D);
+  // Botanical Palette
+  static const Color primaryPurple = Color(0xFF7457A2);
+  static const Color accentGold = Color(0xFFF7C948);
+  static const Color darkBg = Color(0xFFF8F6FF);
+  static const Color surfaceColor = Colors.white;
+
+  @override
+  State<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
+}
+
+class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
+  int _selectedIndex = 0;
 
   @override
   Widget build(BuildContext context) {
-    final appState = context.watch<AppState>();
-    final orders = appState.orders;
-
+    final appState = Provider.of<AppState>(context);
+    final isMobile = MediaQuery.of(context).size.width < 900;
+    
     return Scaffold(
-      backgroundColor: _kBg,
-      appBar: AppBar(
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: _kPurpleSoft,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(Icons.admin_panel_settings,
-                  color: _kPurple, size: 24),
-            ),
-            const SizedBox(width: 12),
-            const Text(
-              'Admin Dashboard',
-              style: TextStyle(
-                color: _kText,
-                fontWeight: FontWeight.w700,
-                fontSize: 20,
-                letterSpacing: -0.3,
-              ),
-            ),
-          ],
-        ),
-        centerTitle: false,
-        elevation: 0,
-        backgroundColor: _kWhite,
-        actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 16),
-            child: IconButton(
-              icon: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: _kPurpleSoft,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(Icons.add, color: _kPurple, size: 20),
-              ),
-              onPressed: () {
-                context.push('/upload');
-              },
-            ),
-          ),
-        ],
-      ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          // Refresh logic if needed
-          await Future.delayed(const Duration(milliseconds: 500));
-        },
-        color: _kPurple,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Welcome Section
-              _buildWelcomeSection(appState),
-              const SizedBox(height: 24),
-              // Stats Grid
-              _buildStatsGrid(appState),
-              const SizedBox(height: 32),
-              // Orders Section Header
-              _buildSectionHeader(
-                  'Recent Orders', Icons.receipt_long, orders.length),
-              const SizedBox(height: 16),
-              // Orders List
-              orders.isEmpty
-                  ? _buildEmptyOrders()
-                  : ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: orders.length,
-                      itemBuilder: (context, index) {
-                        return _AnimatedOrderCard(
-                          index: index,
-                          order: orders[index],
-                          onStatusChanged: (status) {
-                            context
-                                .read<AppState>()
-                                .updateOrderStatus(orders[index].id, status);
-                          },
-                        );
-                      },
-                    ),
-              const SizedBox(height: 20),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildWelcomeSection(AppState appState) {
-    final orderCount = appState.orders.length;
-    final productCount = appState.products.length;
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [_kPurple, _kPurple.withOpacity(0.8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: _kPurple.withOpacity(0.2),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Row(
+      backgroundColor: AdminDashboardScreen.darkBg,
+      drawer: isMobile ? _buildDrawer(context) : null,
+      appBar: isMobile ? AppBar(
+        backgroundColor: AdminDashboardScreen.surfaceColor,
+        title: Text('ADMIN DASHBOARD', style: GoogleFonts.orbitron(fontSize: 12, color: AdminDashboardScreen.primaryPurple)),
+        iconTheme: const IconThemeData(color: AdminDashboardScreen.primaryPurple),
+      ) : null,
+      floatingActionButton: _selectedIndex == 1 ? FloatingActionButton(
+        backgroundColor: AdminDashboardScreen.accentGold,
+        onPressed: () => _showAddProductDialog(context, appState),
+        child: const Icon(Icons.add, color: AdminDashboardScreen.darkBg),
+      ) : null,
+      body: Row(
         children: [
+          // Sidebar (only on Desktop)
+          if (!isMobile) _buildSidebar(context),
+          
+          // Main Content
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: IndexedStack(
+              index: _selectedIndex,
               children: [
-                const Text(
-                  'Welcome back!',
-                  style: TextStyle(
-                    color: _kWhite,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.5,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'You have $orderCount orders and $productCount products',
-                  style: const TextStyle(
-                    color: _kWhite,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: _kWhite.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.store, color: _kWhite, size: 16),
-                      SizedBox(width: 6),
-                      Text(
-                        'Bloom & Co.',
-                        style: TextStyle(color: _kWhite, fontSize: 12),
-                      ),
-                    ],
-                  ),
-                ),
+                _buildDashboardView(appState, isMobile),
+                _buildProductsView(appState, isMobile),
+                _buildOrdersView(appState, isMobile),
+                _buildAnalyticsView(appState, isMobile),
               ],
             ),
           ),
-          // Animated Flower Icon
-          SizedBox(
-            width: 80,
-            height: 80,
-            child: Lottie.network(
-              'https://assets10.lottiefiles.com/packages/lf20_96py9mdf.json',
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) => Container(
-                decoration: BoxDecoration(
-                  color: _kWhite.withOpacity(0.2),
-                  shape: BoxShape.circle,
-                ),
-                child:
-                    const Icon(Icons.local_florist, color: _kWhite, size: 40),
-              ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDashboardView(AppState appState, bool isMobile) {
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(isMobile ? 16 : 32),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildHeader('SYSTEM OVERVIEW', 'REAL-TIME PERFORMANCE METRICS', isMobile),
+          const SizedBox(height: 32),
+          _buildStatsGrid(appState, isMobile),
+          const SizedBox(height: 32),
+          _buildRecentOrders(appState, isMobile),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProductsView(AppState appState, bool isMobile) {
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(isMobile ? 16 : 32),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildHeader('PRODUCT INVENTORY', 'MANAGE YOUR BLOOMS', isMobile),
+          const SizedBox(height: 32),
+          if (appState.products.isEmpty)
+            _buildEmptyState('NO PRODUCTS IN INVENTORY')
+          else
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: appState.products.length,
+              itemBuilder: (context, index) {
+                final p = appState.products[index];
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: AdminDashboardScreen.surfaceColor,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: ListTile(
+                    leading: Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: AdminDashboardScreen.darkBg,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.flower, color: AdminDashboardScreen.accentGold),
+                    ),
+                    title: Text(p.name, style: GoogleFonts.orbitron(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+                    subtitle: Text(p.category, style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 11)),
+                    trailing: Text('\$${p.price.toInt()}', style: GoogleFonts.orbitron(color: AdminDashboardScreen.accentGold, fontWeight: FontWeight.bold)),
+                  ),
+                );
+              },
             ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOrdersView(AppState appState, bool isMobile) {
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(isMobile ? 16 : 32),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildHeader('ORDER MANAGEMENT', 'TRACK ALL CUSTOMER REQUESTS', isMobile),
+          const SizedBox(height: 32),
+          if (appState.orders.isEmpty)
+            _buildEmptyState('NO ORDERS PENDING')
+          else
+            ...appState.orders.map((o) => _OrderCard(order: o, isMobile: isMobile, onStatusChanged: (s) {})),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAnalyticsView(AppState appState, bool isMobile) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.analytics, size: 64, color: AdminDashboardScreen.primaryPurple.withOpacity(0.5)),
+          const SizedBox(height: 16),
+          Text('ANALYTICS ENGINE LOADING...', style: GoogleFonts.orbitron(color: Colors.white24)),
+        ],
+      ),
+    );
+  }
+
+  void _showAddProductDialog(BuildContext context, AppState appState) {
+    final nameController = TextEditingController();
+    final priceController = TextEditingController();
+    final categoryController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AdminDashboardScreen.surfaceColor,
+        title: Text('ADD NEW BLOOM', style: GoogleFonts.orbitron(color: AdminDashboardScreen.primaryPurple, fontSize: 14)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              style: const TextStyle(color: Colors.white),
+              decoration: _inputDecoration('FLOWER NAME'),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: priceController,
+              style: const TextStyle(color: Colors.white),
+              keyboardType: TextInputType.number,
+              decoration: _inputDecoration('PRICE (\$)'),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: categoryController,
+              style: const TextStyle(color: Colors.white),
+              decoration: _inputDecoration('CATEGORY'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('CANCEL', style: TextStyle(color: Colors.white.withOpacity(0.5))),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AdminDashboardScreen.primaryPurple),
+            onPressed: () {
+              if (nameController.text.isNotEmpty && priceController.text.isNotEmpty) {
+                final newProduct = Product(
+                  id: DateTime.now().millisecondsSinceEpoch.toString(),
+                  name: nameController.text,
+                  description: 'New artisanal flower arrangement.',
+                  price: double.tryParse(priceController.text) ?? 0.0,
+                  imageUrl: 'assets/images/flower.png',
+                  category: categoryController.text,
+                  tags: ['Admin', 'New'],
+                );
+                appState.addProduct(newProduct);
+                Navigator.pop(context);
+              }
+            },
+            child: const Text('ADD TO SHOP', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSectionHeader(String title, IconData icon, int count) {
-    return Row(
+  InputDecoration _inputDecoration(String label) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(color: AdminDashboardScreen.primaryPurple.withOpacity(0.5), fontSize: 10),
+      enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AdminDashboardScreen.primaryPurple.withOpacity(0.2))),
+      focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AdminDashboardScreen.primaryPurple)),
+    );
+  }
+
+  Widget _buildSidebar(BuildContext context) {
+    return Container(
+      width: 260,
+      color: Colors.white,
+      child: _SidebarContent(
+        selectedIndex: _selectedIndex,
+        onTap: (index) {
+          print("Admin Sidebar Clicked: $index");
+          setState(() => _selectedIndex = index);
+        },
+        onLogout: () => context.go('/'),
+      ),
+    );
+  }
+
+  Widget _buildDrawer(BuildContext context) {
+    return Drawer(
+      backgroundColor: Colors.white,
+      child: _SidebarContent(
+        selectedIndex: _selectedIndex,
+        onTap: (index) {
+          print("Admin Drawer Clicked: $index");
+          setState(() => _selectedIndex = index);
+          Navigator.pop(context);
+        },
+        onLogout: () => context.go('/'),
+      ),
+    );
+  }
+
+  Widget _buildHeader(String title, String sub, bool isMobile) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: _kPurpleSoft,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(icon, color: _kPurple, size: 20),
-        ),
-        const SizedBox(width: 12),
         Text(
           title,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: _kText,
+          style: GoogleFonts.orbitron(
+            color: AdminDashboardScreen.primaryPurple,
+            fontSize: isMobile ? 18 : 24,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 2,
           ),
         ),
-        const Spacer(),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(
-            color: _kPurpleSoft,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Text(
-            '$count',
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: _kPurple,
-            ),
+        const SizedBox(height: 8),
+        Text(
+          sub,
+          style: GoogleFonts.orbitron(
+            color: AdminDashboardScreen.primaryPurple.withOpacity(0.5),
+            fontSize: isMobile ? 8 : 10,
+            letterSpacing: isMobile ? 2 : 4,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildStatsGrid(AppState appState) {
-    final products = appState.products.length.toString();
-    final ordersCount = appState.orders.length.toString();
-    final totalSales = '\$${_calculateTotalSales(appState.orders)}';
-    const customers = '124';
-
+  Widget _buildStatsGrid(AppState appState, bool isMobile) {
     return GridView.count(
       shrinkWrap: true,
-      crossAxisCount: 2,
-      childAspectRatio: 1.4,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: isMobile ? 2 : 4,
       crossAxisSpacing: 16,
       mainAxisSpacing: 16,
-      physics: const NeverScrollableScrollPhysics(),
+      childAspectRatio: 1.5,
       children: [
-        _StatCard(
-          label: 'Total Products',
-          value: products,
-          icon: Icons.inventory_2_outlined,
-          color: _kPurple,
-          gradientColors: [_kPurpleSoft, _kPurple.withOpacity(0.1)],
-        ),
-        _StatCard(
-          label: 'Total Orders',
-          value: ordersCount,
-          icon: Icons.shopping_bag_outlined,
-          color: _kGreen,
-          gradientColors: [
-            const Color(0xFFE8F5E9),
-            Colors.green.withOpacity(0.1)
-          ],
-        ),
-        _StatCard(
-          label: 'Total Sales',
-          value: totalSales,
-          icon: Icons.payments_outlined,
-          color: _kGold,
-          gradientColors: [
-            const Color(0xFFFFF8E1),
-            Colors.amber.withOpacity(0.1)
-          ],
-        ),
-        _StatCard(
-          label: 'Customers',
-          value: customers,
-          icon: Icons.people_outline,
-          color: _kOrange,
-          gradientColors: [
-            const Color(0xFFFFF3E0),
-            Colors.orange.withOpacity(0.1)
-          ],
-        ),
+        _AdminStatCard(label: 'TOTAL REVENUE', value: '\$${appState.totalRevenue.toInt()}', color: AdminDashboardScreen.accentGold),
+        _AdminStatCard(label: 'ACTIVE ORDERS', value: '${appState.orders.length}', color: Colors.blue),
+        _AdminStatCard(label: 'PRODUCTS', value: '${appState.products.length}', color: Colors.green),
+        _AdminStatCard(label: 'CUSTOMERS', value: '1.2K', color: Colors.purple),
       ],
     );
   }
 
-  String _calculateTotalSales(List<BBOrder> orders) {
-    return orders.fold(0.0, (sum, o) => sum + o.totalAmount).toStringAsFixed(0);
+  Widget _buildRecentOrders(AppState appState, bool isMobile) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'RECENT LOGS',
+              style: GoogleFonts.orbitron(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold, letterSpacing: 2),
+            ),
+            TextButton(
+              onPressed: () => setState(() => _selectedIndex = 2),
+              child: Text('VIEW ALL', style: GoogleFonts.orbitron(color: AdminDashboardScreen.accentGold, fontSize: 10)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        if (appState.orders.isEmpty) _buildEmptyState('NO DATA STREAM DETECTED')
+        else
+          ...appState.orders.take(5).map((order) => _OrderCard(
+                order: order,
+                isMobile: isMobile,
+                onStatusChanged: (s) {},
+              )),
+      ],
+    );
   }
 
-  Widget _buildEmptyOrders() {
+  Widget _buildEmptyState(String message) {
     return Container(
-      padding: const EdgeInsets.all(48),
+      height: 200,
+      width: double.infinity,
       decoration: BoxDecoration(
-        color: _kWhite,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _kPurpleSoft),
+        color: AdminDashboardScreen.surfaceColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
       ),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.receipt_long_outlined,
-              color: _kTextSub.withOpacity(0.5), size: 64),
+          Icon(Icons.data_array, color: Colors.white.withOpacity(0.2), size: 64),
           const SizedBox(height: 16),
           Text(
-            'No Orders Yet',
-            style: TextStyle(
-              color: _kTextSub,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Orders will appear here once customers checkout',
-            style: TextStyle(
-              color: _kTextSub.withOpacity(0.7),
-              fontSize: 13,
-            ),
+            message,
+            style: GoogleFonts.orbitron(color: Colors.white24, fontSize: 12),
           ),
         ],
       ),
@@ -349,70 +350,70 @@ class AdminDashboardScreen extends StatelessWidget {
   }
 }
 
-// ─── Stat Card Widget ───────────────────────────────────────────────────────
-class _StatCard extends StatelessWidget {
+class _SidebarContent extends StatelessWidget {
+  final int selectedIndex;
+  final Function(int) onTap;
+  final VoidCallback onLogout;
+  
+  const _SidebarContent({
+    required this.selectedIndex,
+    required this.onTap,
+    required this.onLogout,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        const SizedBox(height: 40),
+        _SidebarItem(icon: Icons.dashboard, label: 'DASHBOARD', isActive: selectedIndex == 0, onTap: () => onTap(0)),
+        _SidebarItem(icon: Icons.inventory_2, label: 'PRODUCTS', isActive: selectedIndex == 1, onTap: () => onTap(1)),
+        _SidebarItem(icon: Icons.shopping_basket, label: 'ORDERS', isActive: selectedIndex == 2, onTap: () => onTap(2)),
+        _SidebarItem(icon: Icons.analytics, label: 'ANALYTICS', isActive: selectedIndex == 3, onTap: () => onTap(3)),
+        const Spacer(),
+        _SidebarItem(
+          icon: Icons.logout, 
+          label: 'LOGOUT', 
+          isActive: false, 
+          onTap: onLogout,
+        ),
+        const SizedBox(height: 40),
+      ],
+    );
+  }
+}
+
+class _AdminStatCard extends StatelessWidget {
   final String label;
   final String value;
-  final IconData icon;
   final Color color;
-  final List<Color> gradientColors;
 
-  const _StatCard({
-    required this.label,
-    required this.value,
-    required this.icon,
-    required this.color,
-    required this.gradientColors,
-  });
+  const _AdminStatCard({required this.label, required this.value, required this.color});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: gradientColors,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.2)),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: AdminDashboardScreen.surfaceColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: color, size: 22),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w800,
-              color: _kText,
+          FittedBox(
+            child: Text(
+              label,
+              style: GoogleFonts.orbitron(color: color.withOpacity(0.7), fontSize: 8, fontWeight: FontWeight.bold),
             ),
           ),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: _kTextSub,
-              letterSpacing: 0.5,
+          const SizedBox(height: 8),
+          FittedBox(
+            child: Text(
+              value,
+              style: GoogleFonts.orbitron(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -421,331 +422,128 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-// ─── Animated Order Card ────────────────────────────────────────────────────
-class _AnimatedOrderCard extends StatefulWidget {
-  final int index;
-  final BBOrder order;
-  final Function(OrderStatus) onStatusChanged;
-
-  const _AnimatedOrderCard({
-    required this.index,
-    required this.order,
-    required this.onStatusChanged,
-  });
-
-  @override
-  State<_AnimatedOrderCard> createState() => _AnimatedOrderCardState();
-}
-
-class _AnimatedOrderCardState extends State<_AnimatedOrderCard>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
-  late Animation<double> _slideAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 400),
-    );
-    _fadeAnimation = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
-    );
-    _slideAnimation = Tween<double>(begin: 20, end: 0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
-    );
-    _controller.forward();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: _fadeAnimation,
-      child: Transform.translate(
-        offset: Offset(0, _slideAnimation.value),
-        child: Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: _OrderCard(
-            order: widget.order,
-            onStatusChanged: widget.onStatusChanged,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ─── Order Card Widget ──────────────────────────────────────────────────────
 class _OrderCard extends StatelessWidget {
   final BBOrder order;
+  final bool isMobile;
   final Function(OrderStatus) onStatusChanged;
 
   const _OrderCard({
     required this.order,
+    required this.isMobile,
     required this.onStatusChanged,
   });
 
-  Color _getStatusColor(OrderStatus status) {
-    switch (status) {
-      case OrderStatus.pending:
-        return _kOrange;
-      case OrderStatus.confirmed:
-        return _kPurple;
-      case OrderStatus.shipped:
-        return Colors.blue;
-      case OrderStatus.prepared:
-        return _kGold;
-      case OrderStatus.outForDelivery:
-        return Colors.indigo;
-      case OrderStatus.delivered:
-        return _kGreen;
-      case OrderStatus.cancelled:
-        return _kRed;
-    }
-  }
-
-  IconData _getStatusIcon(OrderStatus status) {
-    switch (status) {
-      case OrderStatus.pending:
-        return Icons.pending_outlined;
-      case OrderStatus.confirmed:
-        return Icons.check_circle_outline;
-      case OrderStatus.shipped:
-        return Icons.local_shipping_outlined;
-      case OrderStatus.prepared:
-        return Icons.inventory_2_outlined;
-      case OrderStatus.outForDelivery:
-        return Icons.delivery_dining;
-      case OrderStatus.delivered:
-        return Icons.celebration_outlined;
-      case OrderStatus.cancelled:
-        return Icons.cancel_outlined;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final statusColor = _getStatusColor(order.status);
-
     return Container(
+      margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: _kWhite,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: _kPurple.withOpacity(0.06),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: AdminDashboardScreen.surfaceColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Row(
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AdminDashboardScreen.primaryPurple.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(Icons.receipt_long, color: AdminDashboardScreen.primaryPurple, size: 20),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'ORDER #${order.id.substring(0, 8).toUpperCase()}',
+                  style: GoogleFonts.orbitron(color: AdminDashboardScreen.primaryPurple, fontSize: 10, fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  order.customerName,
+                  style: TextStyle(color: AdminDashboardScreen.primaryPurple.withOpacity(0.5), fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(_getStatusIcon(order.status),
-                    color: statusColor, size: 24),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          'ORDER #${order.id.substring(0, 8).toUpperCase()}',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: _kText,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: statusColor.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            order.status.displayText.toUpperCase(),
-                            style: TextStyle(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w700,
-                              color: statusColor,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      '\$${order.totalAmount.toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        color: _kPurple,
-                      ),
-                    ),
-                  ],
+              Text(
+                '\$${order.totalAmount.toInt()}',
+                style: GoogleFonts.orbitron(
+                  color: AdminDashboardScreen.accentGold, 
+                  fontSize: 14, 
+                  fontWeight: FontWeight.bold
                 ),
               ),
-              _StatusDropdown(
-                currentStatus: order.status,
-                onChanged: onStatusChanged,
-                statusColor: statusColor,
-              ),
+              const SizedBox(height: 4),
+              _StatusChip(status: order.status),
             ],
           ),
-          if (order.items.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Divider(color: _kPurpleSoft, height: 1),
-            const SizedBox(height: 8),
-            SizedBox(
-              height: 32,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: order.items.length > 3 ? 3 : order.items.length,
-                itemBuilder: (context, index) {
-                  final item = order.items[index];
-                  return Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    margin: const EdgeInsets.only(right: 8),
-                    decoration: BoxDecoration(
-                      color: _kPurpleSoft,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      '${item.product.name} x${item.quantity}',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: _kTextSub,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
         ],
       ),
     );
   }
 }
 
-// ─── Status Dropdown Widget ─────────────────────────────────────────────────
-class _StatusDropdown extends StatelessWidget {
-  final OrderStatus currentStatus;
-  final Function(OrderStatus) onChanged;
-  final Color statusColor;
+class _StatusChip extends StatelessWidget {
+  final OrderStatus status;
+  const _StatusChip({required this.status});
 
-  const _StatusDropdown({
-    required this.currentStatus,
-    required this.onChanged,
-    required this.statusColor,
+  @override
+  Widget build(BuildContext context) {
+    Color color = AdminDashboardScreen.primaryPurple;
+    if (status == OrderStatus.confirmed) color = AdminDashboardScreen.accentGold;
+    if (status == OrderStatus.delivered) color = Colors.green;
+    if (status == OrderStatus.cancelled) color = Colors.red;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.withOpacity(0.5)),
+      ),
+      child: Text(
+        status.toString().split('.').last.toUpperCase(),
+        style: GoogleFonts.orbitron(color: color, fontSize: 7, fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+}
+
+class _SidebarItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool isActive;
+  final VoidCallback onTap;
+
+  const _SidebarItem({
+    required this.icon,
+    required this.label,
+    required this.isActive,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: statusColor.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: statusColor.withOpacity(0.2)),
-      ),
-      child: PopupMenuButton<OrderStatus>(
-        initialValue: currentStatus,
-        offset: const Offset(0, 30),
-        elevation: 4,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        onSelected: onChanged,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              currentStatus.displayText,
-              style: TextStyle(
-                color: statusColor,
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            Icon(Icons.arrow_drop_down, color: statusColor, size: 18),
-          ],
+    return ListTile(
+      onTap: onTap,
+      leading: Icon(icon, color: isActive ? AdminDashboardScreen.accentGold : AdminDashboardScreen.primaryPurple.withOpacity(0.3)),
+      title: Text(
+        label,
+        style: GoogleFonts.orbitron(
+          color: isActive ? AdminDashboardScreen.primaryPurple : AdminDashboardScreen.primaryPurple.withOpacity(0.3),
+          fontSize: 12,
+          fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+          letterSpacing: 2,
         ),
-        itemBuilder: (BuildContext context) => OrderStatus.values.map((status) {
-          Color itemColor;
-          switch (status) {
-            case OrderStatus.prepared:
-              itemColor = _kGold;
-              break;
-            case OrderStatus.outForDelivery:
-              itemColor = Colors.indigo;
-              break;
-            case OrderStatus.confirmed:
-              itemColor = _kPurple;
-              break;
-            case OrderStatus.shipped:
-              itemColor = Colors.blue;
-              break;
-            case OrderStatus.delivered:
-              itemColor = _kGreen;
-              break;
-            case OrderStatus.cancelled:
-              itemColor = _kRed;
-              break;
-            case OrderStatus.pending:
-              itemColor = _kOrange;
-              break;
-          }
-          return PopupMenuItem<OrderStatus>(
-            value: status,
-            child: Row(
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: itemColor,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  status.displayText,
-                  style: TextStyle(
-                    color: itemColor,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ),
-          );
-        }).toList(),
       ),
+      selected: isActive,
     );
   }
 }

@@ -3,11 +3,11 @@ import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   // Brand Colors
-  static const Color primaryGreen = Color(0xFF05190E);
+  static const Color primaryGreen = Color(0xFF7457A2); // Updated to Purple
   static const Color primaryContainer = Color(0xFF1A2E22);
   static const Color petalPink = Color(0xFF6F5959);
   static const Color pinkContainer = Color(0xFFF6D9D9);
-  static const Color richGold = Color(0xFF211300);
+  static const Color richGold = Color(0xFFF7C948); // Updated to Gold
   static const Color goldContainer = Color(0xFF3B2600);
   static const Color alabaster = Color(0xFFFBF9F6);
   static const Color onSurface = Color(0xFF1B1C1A);
@@ -67,7 +67,7 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color.fromARGB(255, 36, 77, 54),
+          backgroundColor: primaryGreen,
           foregroundColor: Colors.white,
           elevation: 0,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
@@ -85,7 +85,7 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: false,
         enabledBorder: const UnderlineInputBorder(
-          borderSide: BorderSide(color: primaryGreen),
+          borderSide: BorderSide(color: Color.fromARGB(255, 125, 93, 175)),
         ),
         focusedBorder: const UnderlineInputBorder(
           borderSide: BorderSide(color: primaryGreen, width: 2),
@@ -108,29 +108,27 @@ class AppTheme {
   }
 
   static ThemeData get neonTheme {
-    const Color neonCyan = Color(0xFF00FFFF);
-    const Color neonMagenta = Color(0xFFFF00FF);
-    const Color neonLime = Color(0xFF39FF14);
-    const Color neonPink = Color(0xFFFF10F0);
-    const Color darkBg = Color(0xFF0D0D0D);
-    const Color neonSurface = Color(0xFF111213);
-    const Color outlineNeon = Color(0xFF2A2B2F);
+    const Color primaryPurple = Color(0xFF7457A2);
+    const Color accentGold = Color(0xFFF7C948);
+    const Color darkBg = Color(0xFF1A1523);
+    const Color surfaceColor = Color(0xFF261F33);
+    const Color outlineColor = Color(0xFF3D3352);
 
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
       scaffoldBackgroundColor: darkBg,
-      dividerColor: outlineNeon,
+      dividerColor: outlineColor,
       colorScheme: const ColorScheme.dark(
-        primary: neonCyan,
-        secondary: neonMagenta,
-        tertiary: neonLime,
-        surface: neonSurface,
+        primary: primaryPurple,
+        secondary: accentGold,
+        tertiary: accentGold,
+        surface: surfaceColor,
         background: darkBg,
-        outline: outlineNeon,
+        outline: outlineColor,
         error: Color(0xFFFF4D4D),
       ),
-      textTheme: _textTheme(neonCyan, Colors.white).copyWith(
+      textTheme: _textTheme(primaryPurple, Colors.white).copyWith(
         bodySmall: GoogleFonts.manrope(
           fontSize: 12,
           fontWeight: FontWeight.w500,
@@ -142,36 +140,36 @@ class AppTheme {
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        iconTheme: IconThemeData(color: neonCyan),
+        iconTheme: IconThemeData(color: primaryPurple),
         titleTextStyle: TextStyle(
-          color: neonCyan,
+          color: primaryPurple,
           fontSize: 18,
           fontWeight: FontWeight.bold,
           letterSpacing: 2,
         ),
       ),
       cardTheme: CardThemeData(
-        color: neonSurface,
+        color: surfaceColor,
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: outlineNeon, width: 1),
+          side: BorderSide(color: outlineColor.withOpacity(0.5), width: 1),
         ),
         margin: const EdgeInsets.symmetric(vertical: 8),
       ),
-
-      dividerTheme: const DividerThemeData(
+      dividerTheme: DividerThemeData(
         thickness: 1,
-        color: outlineNeon,
+        color: outlineColor.withOpacity(0.5),
         space: 12,
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: false,
-        enabledBorder: const OutlineInputBorder(
-          borderSide: BorderSide(color: outlineNeon, width: 1),
+        enabledBorder: OutlineInputBorder(
+          borderSide:
+              BorderSide(color: outlineColor.withOpacity(0.5), width: 1),
         ),
         focusedBorder: const OutlineInputBorder(
-          borderSide: BorderSide(color: neonCyan, width: 2),
+          borderSide: BorderSide(color: primaryPurple, width: 2),
         ),
         errorBorder: const OutlineInputBorder(
           borderSide: BorderSide(color: Color(0xFFFF4D4D), width: 2),
@@ -183,7 +181,7 @@ class AppTheme {
           fontSize: 12,
           fontWeight: FontWeight.w600,
           letterSpacing: 1.2,
-          color: neonCyan,
+          color: primaryPurple,
         ),
         hintStyle: GoogleFonts.manrope(
           fontSize: 14,
@@ -192,22 +190,22 @@ class AppTheme {
         ),
       ),
       popupMenuTheme: PopupMenuThemeData(
-        color: neonSurface,
+        color: surfaceColor,
         elevation: 12,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: outlineNeon, width: 1),
+          side: BorderSide(color: outlineColor.withOpacity(0.5), width: 1),
         ),
       ),
       textSelectionTheme: const TextSelectionThemeData(
-        cursorColor: neonCyan,
-        selectionColor: Color(0x3300FFFF),
-        selectionHandleColor: neonCyan,
+        cursorColor: primaryPurple,
+        selectionColor: Color(0x337457A2),
+        selectionHandleColor: primaryPurple,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: neonCyan,
-          foregroundColor: Colors.black,
+          backgroundColor: primaryPurple,
+          foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -217,23 +215,19 @@ class AppTheme {
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: neonCyan,
-          side: const BorderSide(color: neonCyan, width: 1),
+          foregroundColor: primaryPurple,
+          side: const BorderSide(color: primaryPurple, width: 1),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
         ),
       ),
-      iconTheme: const IconThemeData(color: neonCyan),
-
-
-
+      iconTheme: const IconThemeData(color: primaryPurple),
     );
   }
 
   static TextTheme _textTheme(Color primary, Color surface) {
-
     return TextTheme(
       displayLarge: GoogleFonts.notoSerif(
         fontSize: 64,
@@ -328,6 +322,5 @@ class AppTheme {
         color: surface.withOpacity(0.7),
       ),
     );
-}
-
+  }
 }

@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/app_state.dart';
-import '../widgets/flower_button.dart';
 import '../widgets/image_fallback.dart';
 import '../models/product.dart';
 
@@ -27,6 +26,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  String _currentLocation = 'Detecting Location...';
   String _selectedCategory = 'All';
   final _searchController = TextEditingController();
 
@@ -37,6 +37,22 @@ class _HomeScreenState extends State<HomeScreen> {
     'Daisy',
     'Tulip',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _detectLocation();
+  }
+
+  Future<void> _detectLocation() async {
+    // Simulate location detection
+    await Future.delayed(const Duration(seconds: 2));
+    if (mounted) {
+      setState(() {
+        _currentLocation = 'Islamabad, Pakistan';
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -58,13 +74,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       backgroundColor: _kBg,
-      floatingActionButton: kDebugMode
-          ? FlowerButton(
-              size: 56,
-              assetImage: 'assets/images/flower1.jfif',
-              onPressed: () => context.go('/admin'),
-            )
-          : null,
+      floatingActionButton: null,
       bottomNavigationBar: const _BloomBottomNav(currentIndex: 0),
       body: SafeArea(
         child: LayoutBuilder(
@@ -86,6 +96,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       _buildOfferBanner(scaleFactor),
                       _buildCategoriesSection(scaleFactor),
                       _buildTrendingSection(filteredProducts, scaleFactor),
+                      _buildBespokeSection(scaleFactor),
                       _buildOccasionSection(appState.products, scaleFactor),
                       const SizedBox(height: 24),
                     ],
@@ -114,25 +125,26 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Location',
+                  'Hi, $name 👋',
                   style: TextStyle(
-                    fontSize: 11 * scaleFactor,
-                    color: _kTextSub,
+                    fontSize: 18 * scaleFactor,
+                    fontWeight: FontWeight.w800,
+                    color: _kText,
                     fontFamily: 'sans-serif',
                   ),
                 ),
-                SizedBox(height: 2 * scaleFactor),
+                SizedBox(height: 4 * scaleFactor),
                 Row(
                   children: [
                     Icon(Icons.location_on,
                         size: 14 * scaleFactor, color: _kPurple),
                     SizedBox(width: 3 * scaleFactor),
                     Text(
-                      'Rabat, Morocco ▾',
+                      '$_currentLocation ▾',
                       style: TextStyle(
-                        fontSize: 13 * scaleFactor,
+                        fontSize: 12 * scaleFactor,
                         fontWeight: FontWeight.w600,
-                        color: _kText,
+                        color: _kTextSub,
                       ),
                     ),
                   ],
@@ -143,14 +155,26 @@ class _HomeScreenState extends State<HomeScreen> {
           GestureDetector(
             onTap: () => context.go('/profile'),
             child: Container(
-              width: 40 * scaleFactor,
-              height: 40 * scaleFactor,
+              width: 48 * scaleFactor,
+              height: 48 * scaleFactor,
               decoration: BoxDecoration(
-                color: _kPurpleLight,
+                color: _kWhite,
                 shape: BoxShape.circle,
+                border: Border.all(color: _kPurple.withOpacity(0.15)),
+                boxShadow: [
+                  BoxShadow(
+                    color: _kPurple.withOpacity(0.15),
+                    blurRadius: 12 * scaleFactor,
+                    offset: Offset(0, 4 * scaleFactor),
+                  ),
+                ],
               ),
-              child: Icon(Icons.favorite_border,
-                  color: _kPurple, size: 20 * scaleFactor),
+              child: ClipOval(
+                child: user?.photoURL != null
+                    ? Image.network(user!.photoURL!)
+                    : Icon(Icons.person_rounded,
+                        color: _kPurple, size: 28 * scaleFactor),
+              ),
             ),
           ),
         ],
@@ -345,7 +369,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         SizedBox(
-          height: 200 * scaleFactor,
+          height: 230 * scaleFactor,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: EdgeInsets.symmetric(horizontal: 20 * scaleFactor),
@@ -361,6 +385,91 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  // ── Bespoke Section (Customization) ───────────────────────────────────
+  Widget _buildBespokeSection(double scaleFactor) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+          20 * scaleFactor, 22 * scaleFactor, 20 * scaleFactor, 0),
+      child: GestureDetector(
+        onTap: () => context.push('/customize'),
+        child: Container(
+          height: 120 * scaleFactor,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20 * scaleFactor),
+            gradient: const LinearGradient(
+              colors: [Color(0xFF2D1B4E), Color(0xFF7B5EA7)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: _kPurple.withOpacity(0.3),
+                blurRadius: 15 * scaleFactor,
+                offset: Offset(0, 8 * scaleFactor),
+              ),
+            ],
+          ),
+          child: Stack(
+            children: [
+              Positioned(
+                right: -20 * scaleFactor,
+                bottom: -20 * scaleFactor,
+                child: Opacity(
+                  opacity: 0.2,
+                  child: Icon(Icons.auto_awesome,
+                      size: 140 * scaleFactor, color: Colors.white),
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.all(20 * scaleFactor),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'BESPOKE COLLECTION',
+                            style: TextStyle(
+                              color: _kGold,
+                              fontSize: 10 * scaleFactor,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 2,
+                            ),
+                          ),
+                          SizedBox(height: 4 * scaleFactor),
+                          Text(
+                            'Design Your Own\nBouquet or Basket',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18 * scaleFactor,
+                              fontWeight: FontWeight.w800,
+                              height: 1.2,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: EdgeInsets.all(10 * scaleFactor),
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(Icons.arrow_forward_ios,
+                          size: 14 * scaleFactor, color: _kPurple),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -402,7 +511,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         SizedBox(
-          height: 200 * scaleFactor,
+          height: 230 * scaleFactor,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: EdgeInsets.symmetric(horizontal: 20 * scaleFactor),
@@ -555,6 +664,7 @@ class _BannerCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      height: 85 * scaleFactor,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20 * scaleFactor),
         gradient: LinearGradient(
@@ -743,9 +853,16 @@ class _TrendingCard extends StatelessWidget {
                             product.imageUrl,
                             fit: BoxFit.cover,
                             errorBuilder: (c, e, s) =>
-                                ImageFallback(iconSize: 32 * scaleFactor),
+                                const ImageFallback(logoHeight: 40),
                           )
-                        : ImageFallback(iconSize: 32 * scaleFactor),
+                        : product.imageUrl.isNotEmpty
+                            ? Image.network(
+                                product.imageUrl,
+                                fit: BoxFit.cover,
+                                errorBuilder: (c, e, s) =>
+                                    const ImageFallback(logoHeight: 40),
+                              )
+                            : const ImageFallback(logoHeight: 40),
                     Positioned(
                       top: 8 * scaleFactor,
                       right: 8 * scaleFactor,
@@ -826,6 +943,7 @@ class _BloomBottomNav extends StatelessWidget {
     final scaleFactor = MediaQuery.of(context).size.width / 375;
 
     return Container(
+      height: 85 * scaleFactor,
       decoration: BoxDecoration(
         color: _kWhite,
         boxShadow: [
@@ -854,26 +972,27 @@ class _BloomBottomNav extends StatelessWidget {
           fontWeight: FontWeight.w500,
         ),
         elevation: 0,
+        iconSize: 28 * scaleFactor,
         items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined, size: 24 * scaleFactor),
-            activeIcon: Icon(Icons.home_rounded, size: 24 * scaleFactor),
+            icon: Icon(Icons.home_outlined, size: 28 * scaleFactor),
+            activeIcon: Icon(Icons.home_rounded, size: 28 * scaleFactor),
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.search, size: 24 * scaleFactor),
-            activeIcon: Icon(Icons.search, size: 24 * scaleFactor),
+            icon: Icon(Icons.search, size: 28 * scaleFactor),
+            activeIcon: Icon(Icons.search, size: 28 * scaleFactor),
             label: 'Search',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_cart_outlined, size: 24 * scaleFactor),
+            icon: Icon(Icons.shopping_cart_outlined, size: 28 * scaleFactor),
             activeIcon:
-                Icon(Icons.shopping_cart_rounded, size: 24 * scaleFactor),
+                Icon(Icons.shopping_cart_rounded, size: 28 * scaleFactor),
             label: 'Cart',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline, size: 24 * scaleFactor),
-            activeIcon: Icon(Icons.person, size: 24 * scaleFactor),
+            icon: Icon(Icons.person_outline, size: 28 * scaleFactor),
+            activeIcon: Icon(Icons.person, size: 28 * scaleFactor),
             label: 'Profile',
           ),
         ],

@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../app_theme.dart';
 import '../widgets/primary_button.dart';
+import '../widgets/glitter_widget.dart';
+import '../providers/app_state.dart';
+import '../models/product.dart';
 
 class CustomizeGiftScreen extends StatefulWidget {
   const CustomizeGiftScreen({super.key});
@@ -10,155 +15,425 @@ class CustomizeGiftScreen extends StatefulWidget {
   State<CustomizeGiftScreen> createState() => _CustomizeGiftScreenState();
 }
 
-class _CustomizeGiftScreenState extends State<CustomizeGiftScreen> {
-  String _selectedRibbon = 'Silk Cream';
+class _CustomizeGiftScreenState extends State<CustomizeGiftScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  // Bouquet Selections
+  final Map<String, int> _selectedFlowers = {};
+  String _selectedBouquetRibbon = 'Silk Cream';
+
+  // Basket Selections
+  String _selectedBasketType = 'Classic Wicker';
+  final Map<String, bool> _basketContents = {
+    'Roses': true,
+    'Chocolates': false,
+    'Teddy Bear': false,
+    'Greeting Card': true,
+    'Scented Candle': false,
+  };
+
+  final TextEditingController _messageController = TextEditingController();
+
+  final List<String> _flowerOptions = [
+    'Roses',
+    'Lilies',
+    'Tulips',
+    'Daisies',
+    'Peonies',
+    'Sunflowers'
+  ];
+  final List<String> _ribbonOptions = [
+    'Silk Cream',
+    'Forest Velvet',
+    'Gold Satin',
+    'Midnight Blue',
+    'None'
+  ];
+  final List<String> _basketOptions = [
+    'Classic Wicker',
+    'Modern Wooden',
+    'Luxury Velvet Box',
+    'Vintage Tray'
+  ];
+
+  String _selectedWrapping = 'Premium Craft';
+  final List<String> _wrappingOptions = [
+    'Premium Craft',
+    'Luxury Gold',
+    'Floral Pattern',
+    'Minimalist White',
+    'None'
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+    for (var flower in _flowerOptions) {
+      _selectedFlowers[flower] = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    _messageController.dispose();
+    super.dispose();
+  }
+
+  // Botanical Palette matching AppTheme
+  static const Color _kPurple = Color.fromARGB(255, 203, 178, 244);
+  static const Color _kGold = Color(0xFFF7C948);
+  static const Color _kWhite = Colors.white;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
+      backgroundColor: const Color(0xFFF8F6FF),
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => context.pop(),
+        ),
         title: Text(
-          'CUSTOMIZE GIFT',
-          style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                letterSpacing: 4,
-                fontWeight: FontWeight.w700,
-              ),
+          'BESPOKE CREATIONS',
+          style: GoogleFonts.orbitron(
+            color: Colors.black,
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 2,
+          ),
+        ),
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: Colors.black,
+          labelColor: Colors.black,
+          unselectedLabelColor: Colors.black.withOpacity(0.4),
+          labelStyle: GoogleFonts.poppins(
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+          ),
+          tabs: const [
+            Tab(text: 'CUSTOM BOUQUET'),
+            Tab(text: 'CUSTOM BASKET'),
+          ],
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+      body: GlitterWidget(
+        color: Colors.white.withOpacity(0.3),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'GIFT MESSAGE',
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    letterSpacing: 3,
-                    fontWeight: FontWeight.w700,
-                  ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              maxLines: 4,
-              decoration: InputDecoration(
-                hintText: 'WRITE YOUR MESSAGE HERE...',
-                hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppTheme.outline.withOpacity(0.4),
-                    ),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: AppTheme.outline.withOpacity(0.2)),
-                ),
-                focusedBorder: const OutlineInputBorder(
-                  borderSide: BorderSide(color: AppTheme.primaryGreen),
-                ),
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildBouquetCustomization(isDark),
+                  _buildBasketCustomization(isDark),
+                ],
               ),
             ),
-
-            const SizedBox(height: 40),
-
-            Text(
-              'RIBBON SELECTION',
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    letterSpacing: 3,
-                    fontWeight: FontWeight.w700,
-                  ),
-            ),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                _OptionChip(
-                  label: 'Silk Cream',
-                  isActive: _selectedRibbon == 'Silk Cream',
-                  onTap: () => setState(() => _selectedRibbon = 'Silk Cream'),
-                ),
-                _OptionChip(
-                  label: 'Forest Velvet',
-                  isActive: _selectedRibbon == 'Forest Velvet',
-                  onTap: () => setState(() => _selectedRibbon = 'Forest Velvet'),
-                ),
-                _OptionChip(
-                  label: 'Gold Satin',
-                  isActive: _selectedRibbon == 'Gold Satin',
-                  onTap: () => setState(() => _selectedRibbon = 'Gold Satin'),
-                ),
-                _OptionChip(
-                  label: 'None',
-                  isActive: _selectedRibbon == 'None',
-                  onTap: () => setState(() => _selectedRibbon = 'None'),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 40),
-
-            Text(
-              'GIFT WRAP',
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    letterSpacing: 3,
-                    fontWeight: FontWeight.w700,
-                  ),
-            ),
-            const SizedBox(height: 16),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(
-                'PREMIUM RECYCLED PAPER',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              subtitle: Text(
-                'Add a touch of sustainability and elegance.',
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-              value: true,
-              onChanged: (val) {},
-              activeThumbColor: AppTheme.primaryGreen,
-            ),
-
-            const SizedBox(height: 60),
-
-            PrimaryButton(
-              label: 'Save Customization',
-              onPressed: () => context.pop(),
-            ),
+            _buildFooter(isDark),
           ],
         ),
       ),
     );
   }
-}
 
-class _OptionChip extends StatelessWidget {
-  final String label;
-  final bool isActive;
-  final VoidCallback onTap;
+  Widget _buildBouquetCustomization(bool isDark) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionTitle('FLOWER QUANTITIES', isDark),
+          const SizedBox(height: 16),
+          ..._flowerOptions
+              .map((flower) => _buildFlowerCounter(flower, isDark)),
+          const SizedBox(height: 32),
+          _buildSectionTitle('RIBBON SELECTION', isDark),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: _ribbonOptions
+                .map((ribbon) => _buildOptionChip(
+                      ribbon,
+                      _selectedBouquetRibbon == ribbon,
+                      () => setState(() => _selectedBouquetRibbon = ribbon),
+                      isDark,
+                    ))
+                .toList(),
+          ),
+          const SizedBox(height: 32),
+          _buildSectionTitle('GIFT WRAPPING', isDark),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: _wrappingOptions
+                .map((wrap) => _buildOptionChip(
+                      wrap,
+                      _selectedWrapping == wrap,
+                      () => setState(() => _selectedWrapping = wrap),
+                      isDark,
+                    ))
+                .toList(),
+          ),
+        ],
+      ),
+    );
+  }
 
-  const _OptionChip({
-    required this.label,
-    required this.isActive,
-    required this.onTap,
-  });
+  Widget _buildBasketCustomization(bool isDark) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionTitle('BASKET STYLE', isDark),
+          const SizedBox(height: 16),
+          ..._basketOptions.map((basket) => RadioListTile<String>(
+                title: Text(basket.toUpperCase(),
+                    style: GoogleFonts.manrope(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black)),
+                value: basket,
+                groupValue: _selectedBasketType,
+                activeColor: Colors.black,
+                onChanged: (val) => setState(() => _selectedBasketType = val!),
+                contentPadding: EdgeInsets.zero,
+              )),
+          const SizedBox(height: 32),
+          _buildSectionTitle('GIFT ADD-ONS', isDark),
+          const SizedBox(height: 16),
+          ..._basketContents.keys.map((content) => CheckboxListTile(
+                title: Text(content.toUpperCase(),
+                    style: GoogleFonts.manrope(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black)),
+                value: _basketContents[content],
+                activeColor: Colors.black,
+                checkColor: Colors.white,
+                onChanged: (val) =>
+                    setState(() => _basketContents[content] = val!),
+                contentPadding: EdgeInsets.zero,
+              )),
+          const SizedBox(height: 32),
+          _buildSectionTitle('GIFT WRAPPING', isDark),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: _wrappingOptions
+                .map((wrap) => _buildOptionChip(
+                      wrap,
+                      _selectedWrapping == wrap,
+                      () => setState(() => _selectedWrapping = wrap),
+                      isDark,
+                    ))
+                .toList(),
+          ),
+        ],
+      ),
+    );
+  }
 
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildFooter(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.9),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 20,
+              offset: const Offset(0, -5)),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _messageController,
+            maxLines: 2,
+            style: const TextStyle(color: Colors.black),
+            decoration: InputDecoration(
+              hintText: 'ADD A PERSONAL MESSAGE...',
+              hintStyle:
+                  GoogleFonts.manrope(fontSize: 12, color: Colors.black45),
+              filled: true,
+              fillColor: Colors.white,
+              border:
+                  OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: () {
+              final appState = context.read<AppState>();
+              final isBouquet = _tabController.index == 0;
+              final title = isBouquet ? "Custom Bouquet" : "Custom Basket";
+
+              String details = "";
+              double totalPrice = isBouquet ? 25.0 : 35.0; // Base prices
+
+              if (isBouquet) {
+                details += "Flowers: ";
+                _selectedFlowers.forEach((name, count) {
+                  if (count > 0) {
+                    details += "$count $name, ";
+                    totalPrice += count * 5.0;
+                  }
+                });
+                details += "Ribbon: $_selectedBouquetRibbon";
+              } else {
+                details += "Style: $_selectedBasketType, Contents: ";
+                _basketContents.forEach((name, selected) {
+                  if (selected) {
+                    details += "$name, ";
+                    totalPrice += 10.0;
+                  }
+                });
+              }
+
+              details += "\nWrapping: $_selectedWrapping";
+
+              if (_messageController.text.isNotEmpty) {
+                details += "\nMessage: ${_messageController.text}";
+              }
+
+              final customProduct = Product(
+                id: 'custom-${DateTime.now().millisecondsSinceEpoch}',
+                name: title,
+                description: details,
+                price: totalPrice,
+                imageUrl: isBouquet
+                    ? 'assets/images/blackrose.webp'
+                    : 'assets/images/flower.png',
+                category: 'Bespoke',
+                tags: ['Custom', 'Bespoke'],
+              );
+
+              appState.addToCart(customProduct);
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('$title added to cart!'),
+                  backgroundColor: _kPurple,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+              context.pop();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _kPurple,
+              foregroundColor: Colors.white,
+              minimumSize: const Size(double.infinity, 56),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              elevation: 4,
+            ),
+            child: const Text(
+              'ADD TO COLLECTION',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.2,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title, bool isDark) {
+    return Text(
+      title,
+      style: GoogleFonts.manrope(
+        fontSize: 14,
+        fontWeight: FontWeight.w800,
+        letterSpacing: 2,
+        color: Colors.black,
+      ),
+    );
+  }
+
+  Widget _buildFlowerCounter(String name, bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(name.toUpperCase(),
+              style: GoogleFonts.manrope(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Colors.black,
+              )),
+          Row(
+            children: [
+              IconButton(
+                onPressed: () => setState(() {
+                  if (_selectedFlowers[name]! > 0)
+                    _selectedFlowers[name] = _selectedFlowers[name]! - 1;
+                }),
+                icon: const Icon(Icons.remove_circle_outline,
+                    color: Colors.black),
+              ),
+              SizedBox(
+                width: 30,
+                child: Center(
+                  child: Text(
+                    '${_selectedFlowers[name]}',
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: () => setState(
+                    () => _selectedFlowers[name] = _selectedFlowers[name]! + 1),
+                icon: const Icon(Icons.add_circle_outline, color: Colors.black),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOptionChip(
+      String label, bool isActive, VoidCallback onTap, bool isDark) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isActive ? AppTheme.primaryGreen : Colors.white,
-          border: Border.all(
-            color: isActive ? AppTheme.primaryGreen : AppTheme.outline.withOpacity(0.2),
-          ),
-          borderRadius: BorderRadius.circular(4),
+          color: isActive ? Colors.black : Colors.white.withOpacity(0.2),
+          border: Border.all(color: Colors.black, width: 1),
+          borderRadius: BorderRadius.circular(20),
         ),
         child: Text(
           label.toUpperCase(),
-          style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                color: isActive ? Colors.white : AppTheme.primaryGreen,
-                fontSize: 10,
-              ),
+          style: GoogleFonts.manrope(
+            color: isActive ? Colors.white : Colors.black,
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
     );

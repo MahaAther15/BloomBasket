@@ -502,9 +502,11 @@ class _CartItemCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      GestureDetector(
-                        onTap: onRemove,
-                        child: const Icon(
+                      IconButton(
+                        onPressed: onRemove,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        icon: const Icon(
                           Icons.close,
                           size: 18,
                           color: _kTextSub,
@@ -512,6 +514,19 @@ class _CartItemCard extends StatelessWidget {
                       ),
                     ],
                   ),
+                  if (product.description.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      product.description,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: _kTextSub,
+                        fontStyle: FontStyle.italic,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                   const SizedBox(height: 4),
                   Text(
                     'BOUTIQUE',
@@ -580,8 +595,9 @@ class _CartItemCard extends StatelessWidget {
   Widget _buildQuantityIcon(IconData icon, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
+      behavior: HitTestBehavior.opaque,
       child: Container(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         child: Icon(icon, size: 16, color: _kPurple),
       ),
     );

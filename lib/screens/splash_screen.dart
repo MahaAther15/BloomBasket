@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../app_theme.dart';
 import '../providers/app_state.dart';
+import '../widgets/glitter_widget.dart';
 
 // ─── Shared Palette (Matching Your App) ──────────────────────────────────────
 const _kPurple = Color(0xFF7457A2);
@@ -104,146 +105,150 @@ class _SplashScreenState extends State<SplashScreen>
     final isSmallScreen = screenSize.width < 600;
 
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              _kPurple,
-              _kPurpleLight,
-              const Color(0xFFB8A9D4),
-              _kPurpleSoft,
-              _kPurple,
-            ],
-            stops: const [0.0, 0.3, 0.5, 0.7, 1.0],
+      body: GlitterWidget(
+        particleCount: 30,
+        color: _kWhite.withOpacity(0.4),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                _kPurple,
+                _kPurpleLight,
+                const Color(0xFFB8A9D4),
+                _kPurpleSoft,
+                _kPurple,
+              ],
+              stops: const [0.0, 0.3, 0.5, 0.7, 1.0],
+            ),
           ),
-        ),
-        child: AnimatedBuilder(
-          animation: _animationController,
-          builder: (context, child) {
-            return Center(
-              child: FadeTransition(
-                opacity: _fadeAnimation,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Animated Icon with rotation and pulse
-                    Transform.rotate(
-                      angle: _rotationAnimation.value * 3.14159 * 2,
-                      child: ScaleTransition(
-                        scale: _scaleAnimation,
-                        child: AnimatedBuilder(
-                          animation: _pulseAnimation,
-                          builder: (context, child) {
-                            return Transform.scale(
-                              scale: _pulseAnimation.value,
-                              child: Container(
-                                padding:
-                                    EdgeInsets.all(isSmallScreen ? 16 : 20),
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      _kWhite.withOpacity(0.3),
-                                      _kWhite.withOpacity(0.1),
+          child: AnimatedBuilder(
+            animation: _animationController,
+            builder: (context, child) {
+              return Center(
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Animated Icon with rotation and pulse
+                      Transform.rotate(
+                        angle: _rotationAnimation.value * 3.14159 * 2,
+                        child: ScaleTransition(
+                          scale: _scaleAnimation,
+                          child: AnimatedBuilder(
+                            animation: _pulseAnimation,
+                            builder: (context, child) {
+                              return Transform.scale(
+                                scale: _pulseAnimation.value,
+                                child: Container(
+                                  padding:
+                                      EdgeInsets.all(isSmallScreen ? 16 : 20),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        _kWhite.withOpacity(0.3),
+                                        _kWhite.withOpacity(0.1),
+                                      ],
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: _kWhite.withOpacity(0.25),
+                                        blurRadius: 30,
+                                        spreadRadius: 10,
+                                      ),
                                     ],
                                   ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: _kWhite.withOpacity(0.25),
-                                      blurRadius: 30,
-                                      spreadRadius: 10,
-                                    ),
-                                  ],
+                                  child: const Icon(
+                                    Icons.local_florist,
+                                    size: 80,
+                                    color: _kWhite,
+                                  ),
                                 ),
-                                child: const Icon(
-                                  Icons.local_florist,
-                                  size: 80,
-                                  color: _kWhite,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    // Animated Main Title
-                    SlideTransition(
-                      position: _slideAnimation,
-                      child: ShaderMask(
-                        shaderCallback: (bounds) => LinearGradient(
-                          colors: [
-                            _kWhite,
-                            _kWhite,
-                            _kGold,
-                            _kWhite,
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ).createShader(bounds),
-                        child: Text(
-                          'BLOOMBASKET',
-                          style: TextStyle(
-                            fontSize: isSmallScreen ? 28 : 36,
-                            letterSpacing: isSmallScreen ? 6 : 8,
-                            fontWeight: FontWeight.bold,
-                            color: _kWhite,
+                              );
+                            },
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    // Animated Subtitle
-                    SlideTransition(
-                      position: _slideAnimation,
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: isSmallScreen ? 16 : 24,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
+                      const SizedBox(height: 32),
+                      // Animated Main Title
+                      SlideTransition(
+                        position: _slideAnimation,
+                        child: ShaderMask(
+                          shaderCallback: (bounds) => LinearGradient(
                             colors: [
-                              _kWhite.withOpacity(0.2),
-                              _kWhite.withOpacity(0.1),
+                              _kWhite,
+                              _kWhite,
+                              _kGold,
+                              _kWhite,
                             ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ).createShader(bounds),
+                          child: Text(
+                            'BLOOMBASKET',
+                            style: TextStyle(
+                              fontSize: isSmallScreen ? 28 : 36,
+                              letterSpacing: isSmallScreen ? 6 : 8,
+                              fontWeight: FontWeight.bold,
+                              color: _kWhite,
+                            ),
                           ),
-                          borderRadius: BorderRadius.circular(30),
                         ),
-                        child: Text(
-                          'BOTANICAL PRESTIGE',
-                          style: TextStyle(
-                            color: _kWhite.withOpacity(0.9),
-                            letterSpacing: isSmallScreen ? 2 : 4,
-                            fontSize: isSmallScreen ? 10 : 12,
-                            fontWeight: FontWeight.w600,
+                      ),
+                      const SizedBox(height: 12),
+                      // Animated Subtitle
+                      SlideTransition(
+                        position: _slideAnimation,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isSmallScreen ? 16 : 24,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                _kWhite.withOpacity(0.2),
+                                _kWhite.withOpacity(0.1),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          child: Text(
+                            'BOTANICAL PRESTIGE',
+                            style: TextStyle(
+                              color: _kWhite.withOpacity(0.9),
+                              letterSpacing: isSmallScreen ? 2 : 4,
+                              fontSize: isSmallScreen ? 10 : 12,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 60),
-                    // Loading indicator
-                    FadeTransition(
-                      opacity: _fadeAnimation,
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        padding: const EdgeInsets.all(8),
-                        child: const CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            _kWhite,
+                      const SizedBox(height: 60),
+                      // Loading indicator
+                      FadeTransition(
+                        opacity: _fadeAnimation,
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          padding: const EdgeInsets.all(8),
+                          child: const CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              _kWhite,
+                            ),
+                            strokeWidth: 2,
                           ),
-                          strokeWidth: 2,
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
     );

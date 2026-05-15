@@ -11,6 +11,7 @@ import 'screens/checkout_screen.dart';
 import 'screens/order_confirmation_screen.dart';
 import 'screens/track_order_screen.dart';
 import 'screens/admin_dashboard_screen.dart';
+import 'screens/admin_login_screen.dart';
 import 'screens/profile_screen.dart';
 
 final router = GoRouter(
@@ -23,6 +24,10 @@ final router = GoRouter(
     GoRoute(
       path: '/signin',
       builder: (context, state) => const SignInScreen(),
+    ),
+    GoRoute(
+      path: '/admin-login',
+      builder: (context, state) => const AdminLoginScreen(),
     ),
     GoRoute(
       path: '/',

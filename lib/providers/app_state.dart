@@ -279,7 +279,10 @@ class AppState extends ChangeNotifier {
             .toList(),
       };
 
-      await _firestore.collection('users').doc(user.uid).set(userData, SetOptions(merge: true));
+      await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .set(userData, SetOptions(merge: true));
       print("✅ User data saved to Firestore: ${user.email}");
     } catch (e) {
       print("❌ Error saving user data to Firestore: $e");
@@ -289,15 +292,18 @@ class AppState extends ChangeNotifier {
   // ✅ Load user data from Firestore
   Future<void> _loadUserFromFirestore(String uid) async {
     try {
-      DocumentSnapshot doc = await _firestore.collection('users').doc(uid).get();
-      
+      DocumentSnapshot doc =
+          await _firestore.collection('users').doc(uid).get();
+
       if (doc.exists) {
         Map<String, dynamic> userData = doc.data() as Map<String, dynamic>;
         _currentUserData = userData;
 
         // Load favorites
-        List<String> favoriteIds = List<String>.from(userData['favorites'] ?? []);
-        _favorites = _products.where((p) => favoriteIds.contains(p.id)).toList();
+        List<String> favoriteIds =
+            List<String>.from(userData['favorites'] ?? []);
+        _favorites =
+            _products.where((p) => favoriteIds.contains(p.id)).toList();
 
         // Load cart
         List<dynamic> cartData = userData['cart'] ?? [];
@@ -536,6 +542,11 @@ class AppState extends ChangeNotifier {
   // ✅ Get current user data
   Map<String, dynamic> getCurrentUserData() {
     return _currentUserData;
+  }
+
+  void addProduct(Product product) {
+    _products.insert(0, product);
+    notifyListeners();
   }
 
   void _loadSampleProducts() {
@@ -845,12 +856,12 @@ class AppState extends ChangeNotifier {
   // ==================== ADMIN METHODS ====================
   void addProduct(Product product) {
     _products.insert(0, product);
-    
+
     // Save to Firestore if user is logged in (as admin)
     if (_user != null) {
       _saveProductToFirestore(product);
     }
-    
+
     notifyListeners();
   }
 
@@ -880,7 +891,7 @@ class AppState extends ChangeNotifier {
     final index = _orders.indexWhere((o) => o.id == orderId);
     if (index != -1) {
       _orders[index] = _orders[index].copyWith(status: status);
-      
+
       // Update in local storage and Firestore if user is logged in
       if (_user != null) {
         _updateUserLocalData({

@@ -274,6 +274,27 @@ class _SignInScreenState extends State<SignInScreen>
                 ),
               ),
 
+              const SizedBox(height: 40),
+              
+              // Admin Access Link
+              FadeTransition(
+                opacity: _fadeAnimation,
+                child: Center(
+                  child: TextButton(
+                    onPressed: () => context.go('/admin-login'),
+                    child: Text(
+                      'ADMIN ACCESS',
+                      style: TextStyle(
+                        color: _kPurple.withOpacity(0.5),
+                        fontSize: 10,
+                        letterSpacing: 2,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
               const SizedBox(height: 20),
             ],
           ),
