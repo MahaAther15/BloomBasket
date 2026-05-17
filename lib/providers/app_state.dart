@@ -30,9 +30,6 @@ class AppState extends ChangeNotifier {
   String? _localUsersFilePath;
   Map<String, dynamic> _currentUserData = {};
 
-  // Web in-memory fallback for local storage (used when kIsWeb)
-  Map<String, dynamic>? _webLocalData;
-
   List<Product> get products => _products;
   List<CartItem> get cart => _cart;
   List<Product> get favorites => _favorites;
@@ -41,7 +38,6 @@ class AppState extends ChangeNotifier {
   double get cartTotal => _cart.fold(0.0, (sum, item) => sum + item.totalPrice);
   int get cartItemCount => _cart.fold(0, (sum, item) => sum + item.quantity);
   bool get isSignedIn => _user != null;
-  double get totalRevenue => _orders.fold(0.0, (sum, o) => sum + o.totalAmount);
 
   AppState() {
     _initGoogleSignIn();
@@ -56,7 +52,7 @@ class AppState extends ChangeNotifier {
       clientId: const String.fromEnvironment(
         'googleClientId',
         defaultValue:
-            "352717362565-mjjnb1nhd53tvg7ed34dlijo8nub0sib.apps.googleusercontent.com",
+            "712198995530-9dvnog7dj51m0vdk2olioaou6hu8kd4g.apps.googleusercontent.com",
       ),
     );
   }
@@ -82,19 +78,8 @@ class AppState extends ChangeNotifier {
 
   // ✅ Initialize local storage
   Future<void> _initLocalStorage() async {
+    if (kIsWeb) return;
     try {
-      if (kIsWeb) {
-        // Use in-memory storage on web (no file system access)
-        _localUsersFilePath = ':web:';
-        _webLocalData = {
-          'users': [],
-          'version': '1.0',
-          'lastUpdated': DateTime.now().toIso8601String()
-        };
-        print("✅ Web local storage initialized (in-memory)");
-        return;
-      }
-
       final directory = await getApplicationDocumentsDirectory();
       _localUsersFilePath = '${directory.path}/bloombasket_users.json';
 
@@ -117,57 +102,10 @@ class AppState extends ChangeNotifier {
 
   // ✅ Save user data locally
   Future<void> _saveUserLocalData(User user, {String? username}) async {
+    if (kIsWeb) return;
     try {
       if (_localUsersFilePath == null) {
         await _initLocalStorage();
-      }
-
-      // Web in-memory storage
-      if (_localUsersFilePath == ':web:') {
-        final users = _webLocalData!['users'] as List<dynamic>;
-        int existingIndex = users.indexWhere((u) => u['uid'] == user.uid);
-
-        final userData = {
-          'uid': user.uid,
-          'email': user.email,
-          'displayName': username ?? user.displayName ?? '',
-          'photoURL': user.photoURL ?? '',
-          'createdAt': DateTime.now().toIso8601String(),
-          'lastLoginAt': DateTime.now().toIso8601String(),
-          'favorites': _favorites.map((p) => p.id).toList(),
-'cart': _cart
-              .map((item) => {
-                    'productId': item.product.id,
-                    'productName': item.product.name,
-                    'productDescription': item.product.description,
-                    'productPrice': item.product.price,
-                    'imageUrl': item.product.imageUrl,
-                    'category': item.product.category,
-                    'tags': item.product.tags,
-                    'quantity': item.quantity,
-                  })
-              .toList(),
-          'orders': _orders
-              .map((order) => {
-                    'id': order.id,
-                    'totalAmount': order.totalAmount,
-                    'orderDate': order.orderDate.toIso8601String(),
-                    'status': order.status.toString(),
-                    'deliveryAddress': order.deliveryAddress,
-                  })
-              .toList(),
-        };
-
-        if (existingIndex != -1) {
-          users[existingIndex] = userData;
-        } else {
-          users.add(userData);
-        }
-
-        _webLocalData!['lastUpdated'] = DateTime.now().toIso8601String();
-        _currentUserData = userData;
-        print("✅ (web) User data saved locally: ${user.email}");
-        return;
       }
 
       final file = File(_localUsersFilePath!);
@@ -187,15 +125,11 @@ class AppState extends ChangeNotifier {
         'createdAt': DateTime.now().toIso8601String(),
         'lastLoginAt': DateTime.now().toIso8601String(),
         'favorites': _favorites.map((p) => p.id).toList(),
-'cart': _cart
+        'cart': _cart
             .map((item) => {
                   'productId': item.product.id,
                   'productName': item.product.name,
-                  'productDescription': item.product.description,
                   'productPrice': item.product.price,
-                  'imageUrl': item.product.imageUrl,
-                  'category': item.product.category,
-                  'tags': item.product.tags,
                   'quantity': item.quantity,
                 })
             .toList(),
@@ -231,23 +165,19 @@ class AppState extends ChangeNotifier {
 
   // ✅ Load user data from local storage
   Future<void> _loadUserLocalData(String uid) async {
+    if (kIsWeb) return;
     try {
       if (_localUsersFilePath == null) {
         await _initLocalStorage();
       }
 
-      // Web in-memory storage
-      Map<String, dynamic>? data;
-      if (_localUsersFilePath == ':web:') {
-        data = _webLocalData;
-      } else {
-        final file = File(_localUsersFilePath!);
-        if (!await file.exists()) return;
-        final contents = await file.readAsString();
-        data = jsonDecode(contents);
-      }
+      final file = File(_localUsersFilePath!);
+      if (!await file.exists()) return;
 
-      List<dynamic> users = data?['users'] ?? [];
+      final contents = await file.readAsString();
+      Map<String, dynamic> data = jsonDecode(contents);
+
+      List<dynamic> users = data['users'] ?? [];
       final userData = users.firstWhere(
         (u) => u['uid'] == uid,
         orElse: () => null,
@@ -266,16 +196,16 @@ class AppState extends ChangeNotifier {
         List<dynamic> cartItems = userData['cart'] ?? [];
         _cart = [];
         for (var item in cartItems) {
-final product = _products.firstWhere(
+          final product = _products.firstWhere(
             (p) => p.id == item['productId'],
             orElse: () => Product(
               id: item['productId'],
               name: item['productName'],
-              description: (item['productDescription'] ?? '') as String,
+              description: '',
               price: (item['productPrice'] as num).toDouble(),
-              imageUrl: (item['imageUrl'] ?? '') as String,
-              category: (item['category'] ?? '') as String,
-              tags: (item['tags'] ?? []).map((e) => e.toString()).toList(),
+              imageUrl: '',
+              category: '',
+              tags: [],
             ),
           );
           final cartItem = CartItem(product: product);
@@ -306,26 +236,12 @@ final product = _products.firstWhere(
 
   // ✅ Update local user data
   Future<void> _updateUserLocalData(Map<String, dynamic> updates) async {
+    if (kIsWeb) return;
     try {
       if (_user == null) return;
 
       if (_localUsersFilePath == null) {
         await _initLocalStorage();
-      }
-
-      // Web in-memory storage
-      if (_localUsersFilePath == ':web:') {
-        final users = _webLocalData!['users'] as List<dynamic>;
-        int index = users.indexWhere((u) => u['uid'] == _user!.uid);
-
-        if (index != -1) {
-          users[index] = {...users[index], ...updates};
-          _webLocalData!['users'] = users;
-          _webLocalData!['lastUpdated'] = DateTime.now().toIso8601String();
-          _currentUserData = users[index];
-          print("✅ (web) Local user data updated");
-        }
-        return;
       }
 
       final file = File(_localUsersFilePath!);
@@ -358,15 +274,11 @@ final product = _products.firstWhere(
         'photoURL': user.photoURL ?? '',
         'lastLoginAt': FieldValue.serverTimestamp(),
         'favorites': _favorites.map((p) => p.id).toList(),
-'cart': _cart
+        'cart': _cart
             .map((item) => {
                   'productId': item.product.id,
                   'productName': item.product.name,
-                  'productDescription': item.product.description,
                   'productPrice': item.product.price,
-                  'imageUrl': item.product.imageUrl,
-                  'category': item.product.category,
-                  'tags': item.product.tags,
                   'quantity': item.quantity,
                 })
             .toList(),
@@ -402,16 +314,16 @@ final product = _products.firstWhere(
         List<dynamic> cartData = userData['cart'] ?? [];
         _cart = [];
         for (var item in cartData) {
-final product = _products.firstWhere(
+          final product = _products.firstWhere(
             (p) => p.id == item['productId'],
             orElse: () => Product(
               id: item['productId'],
               name: item['productName'],
-              description: (item['productDescription'] ?? '') as String,
+              description: '',
               price: (item['productPrice'] as num).toDouble(),
-              imageUrl: (item['imageUrl'] ?? '') as String,
-              category: (item['category'] ?? '') as String,
-              tags: (item['tags'] ?? []).map((e) => e.toString()).toList(),
+              imageUrl: '',
+              category: '',
+              tags: [],
             ),
           );
           _cart.add(CartItem(product: product)..quantity = item['quantity']);
@@ -483,15 +395,17 @@ final product = _products.firstWhere(
       UserCredential userCredential = await _auth
           .createUserWithEmailAndPassword(email: email, password: password);
 
-      await userCredential.user?.updateDisplayName(username);
-      await userCredential.user?.reload();
+      // Do not await these so the user is redirected to the home screen instantly
+      userCredential.user?.updateDisplayName(username).then((_) {
+        userCredential.user?.reload();
+      });
 
       _user = _auth.currentUser;
 
-      // Save to Firestore and locally
+      // Save to Firestore and locally in the background
       if (_user != null) {
-        await _saveUserToFirestore(_user!, username: username);
-        await _saveUserLocalData(_user!, username: username);
+        _saveUserToFirestore(_user!, username: username);
+        _saveUserLocalData(_user!, username: username);
       }
 
       notifyListeners();
@@ -543,11 +457,11 @@ final product = _products.firstWhere(
 
       _user = userCredential.user;
 
-      // Sync with Firestore and local
+      // Sync with Firestore and local in the background to speed up redirection
       if (_user != null) {
-        await _saveUserToFirestore(_user!); // Ensure doc exists
-        await _loadUserFromFirestore(_user!.uid);
-        await _saveUserLocalData(_user!);
+        _saveUserToFirestore(_user!); // Ensure doc exists
+        _loadUserFromFirestore(_user!.uid);
+        _saveUserLocalData(_user!);
       }
 
       notifyListeners();
@@ -572,11 +486,7 @@ final product = _products.firstWhere(
               .map((item) => {
                     'productId': item.product.id,
                     'productName': item.product.name,
-                    'productDescription': item.product.description,
                     'productPrice': item.product.price,
-                    'imageUrl': item.product.imageUrl,
-                    'category': item.product.category,
-                    'tags': item.product.tags,
                     'quantity': item.quantity,
                   })
               .toList(),
@@ -623,10 +533,6 @@ final product = _products.firstWhere(
         await _initLocalStorage();
       }
 
-      if (_localUsersFilePath == ':web:') {
-        return List<Map<String, dynamic>>.from(_webLocalData?['users'] ?? []);
-      }
-
       final file = File(_localUsersFilePath!);
       if (!await file.exists()) return [];
 
@@ -644,6 +550,9 @@ final product = _products.firstWhere(
   Map<String, dynamic> getCurrentUserData() {
     return _currentUserData;
   }
+
+
+
   void _loadSampleProducts() {
     _products = [
       Product(
@@ -1022,11 +931,7 @@ final product = _products.firstWhere(
             .map((item) => {
                   'productId': item.product.id,
                   'productName': item.product.name,
-                  'productDescription': item.product.description,
                   'productPrice': item.product.price,
-                  'imageUrl': item.product.imageUrl,
-                  'category': item.product.category,
-                  'tags': item.product.tags,
                   'quantity': item.quantity,
                 })
             .toList(),
@@ -1047,11 +952,7 @@ final product = _products.firstWhere(
             .map((item) => {
                   'productId': item.product.id,
                   'productName': item.product.name,
-                  'productDescription': item.product.description,
                   'productPrice': item.product.price,
-                  'imageUrl': item.product.imageUrl,
-                  'category': item.product.category,
-                  'tags': item.product.tags,
                   'quantity': item.quantity,
                 })
             .toList(),
@@ -1090,11 +991,7 @@ final product = _products.firstWhere(
               .map((item) => {
                     'productId': item.product.id,
                     'productName': item.product.name,
-                    'productDescription': item.product.description,
                     'productPrice': item.product.price,
-                    'imageUrl': item.product.imageUrl,
-                    'category': item.product.category,
-                    'tags': item.product.tags,
                     'quantity': item.quantity,
                   })
               .toList(),
@@ -1176,18 +1073,13 @@ final product = _products.firstWhere(
         await _initLocalStorage();
       }
 
+      final file = File(_localUsersFilePath!);
       final initialData = {
         'users': [],
         'version': '1.0',
         'lastUpdated': DateTime.now().toIso8601String()
       };
-
-      if (_localUsersFilePath == ':web:') {
-        _webLocalData = initialData;
-      } else {
-        final file = File(_localUsersFilePath!);
-        await file.writeAsString(jsonEncode(initialData));
-      }
+      await file.writeAsString(jsonEncode(initialData));
 
       _currentUserData = {};
       print("✅ All local data cleared");

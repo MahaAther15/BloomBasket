@@ -41,48 +41,49 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyCDawxKL8cL9cIGAICoZblOPlndezJQ-pg',
-    appId: '1:40288658115:web:f9c59e8e52005168f43876',
-    messagingSenderId: '40288658115',
-    projectId: 'semesterproject-99a2b',
-    authDomain: 'semesterproject-99a2b.firebaseapp.com',
-    storageBucket: 'semesterproject-99a2b.firebasestorage.app',
-    measurementId: 'G-4QVM9VVKQZ',
+    apiKey: 'AIzaSyDv9S11LB2vJyrQegymBUhE5Vw1Y6tsDvQ',
+    appId: '1:712198995530:web:752ff10b24944125ce30b3',
+    messagingSenderId: '712198995530',
+    projectId: 'bloombasket-efb4b',
+    authDomain: 'bloombasket-efb4b.firebaseapp.com',
+    storageBucket: 'bloombasket-efb4b.firebasestorage.app',
+    measurementId: 'G-PYYE7FXMHX',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyAIVvkH74dnt8pCGLeRy-vCUrHIHzp6GnE',
-    appId: '1:40288658115:android:1aa20ee62464b0dcf43876',
-    messagingSenderId: '40288658115',
-    projectId: 'semesterproject-99a2b',
-    storageBucket: 'semesterproject-99a2b.firebasestorage.app',
+    apiKey: 'AIzaSyA__89WbPmzd6vbheYgU2cXj2ONdQvDAFk',
+    appId: '1:712198995530:android:2af54a8e3506f303ce30b3',
+    messagingSenderId: '712198995530',
+    projectId: 'bloombasket-efb4b',
+    storageBucket: 'bloombasket-efb4b.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyA9Ob41mM8AY-zaEOfBc3O0c6oC4Q03dgY',
-    appId: '1:40288658115:ios:c32201d2d42dc099f43876',
-    messagingSenderId: '40288658115',
-    projectId: 'semesterproject-99a2b',
-    storageBucket: 'semesterproject-99a2b.firebasestorage.app',
+    apiKey: 'AIzaSyDBzC_2YK2Pk7yOMv_HYR1jRdnun74gT_I',
+    appId: '1:712198995530:ios:7eeddaca67d5a594ce30b3',
+    messagingSenderId: '712198995530',
+    projectId: 'bloombasket-efb4b',
+    storageBucket: 'bloombasket-efb4b.firebasestorage.app',
     iosBundleId: 'com.example.bloombasket',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyA9Ob41mM8AY-zaEOfBc3O0c6oC4Q03dgY',
-    appId: '1:40288658115:ios:c32201d2d42dc099f43876',
-    messagingSenderId: '40288658115',
-    projectId: 'semesterproject-99a2b',
-    storageBucket: 'semesterproject-99a2b.firebasestorage.app',
+    apiKey: 'AIzaSyDBzC_2YK2Pk7yOMv_HYR1jRdnun74gT_I',
+    appId: '1:712198995530:ios:7eeddaca67d5a594ce30b3',
+    messagingSenderId: '712198995530',
+    projectId: 'bloombasket-efb4b',
+    storageBucket: 'bloombasket-efb4b.firebasestorage.app',
     iosBundleId: 'com.example.bloombasket',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyCDawxKL8cL9cIGAICoZblOPlndezJQ-pg',
-    appId: '1:40288658115:web:d7c190a14a8ff1f1f43876',
-    messagingSenderId: '40288658115',
-    projectId: 'semesterproject-99a2b',
-    authDomain: 'semesterproject-99a2b.firebaseapp.com',
-    storageBucket: 'semesterproject-99a2b.firebasestorage.app',
-    measurementId: 'G-R0Y2SCYJJR',
+    apiKey: 'AIzaSyDv9S11LB2vJyrQegymBUhE5Vw1Y6tsDvQ',
+    appId: '1:712198995530:web:56fc209a0f5cc7bdce30b3',
+    messagingSenderId: '712198995530',
+    projectId: 'bloombasket-efb4b',
+    authDomain: 'bloombasket-efb4b.firebaseapp.com',
+    storageBucket: 'bloombasket-efb4b.firebasestorage.app',
+    measurementId: 'G-DV0JRJ2L59',
   );
+
 }

@@ -289,7 +289,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       mainAxisSpacing: 16,
       childAspectRatio: 1.5,
       children: [
-        _AdminStatCard(label: 'TOTAL REVENUE', value: '\$${appState.totalRevenue.toInt()}', color: AdminDashboardScreen.accentGold),
+        _AdminStatCard(label: 'TOTAL REVENUE', value: '\$${appState.orders.fold(0.0, (sum, order) => sum + order.totalAmount).toInt()}', color: AdminDashboardScreen.accentGold),
         _AdminStatCard(label: 'ACTIVE ORDERS', value: '${appState.orders.length}', color: Colors.blue),
         _AdminStatCard(label: 'PRODUCTS', value: '${appState.products.length}', color: Colors.green),
         _AdminStatCard(label: 'CUSTOMERS', value: '1.2K', color: Colors.purple),
@@ -463,8 +463,10 @@ class _OrderCard extends StatelessWidget {
                   style: GoogleFonts.orbitron(color: AdminDashboardScreen.primaryPurple, fontSize: 10, fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  order.customerName ?? 'Guest',
+                  'Delivery: ${order.deliveryAddress}',
                   style: TextStyle(color: AdminDashboardScreen.primaryPurple.withOpacity(0.5), fontSize: 12),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),

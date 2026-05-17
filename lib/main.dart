@@ -2,15 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-
+import 'firebase_options.dart';
 import 'app_theme.dart';
 import 'routes.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'providers/app_state.dart';
-import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   // Initialize Firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
@@ -29,7 +28,7 @@ Future<void> _initializeGoogleSignIn() async {
 
     // Web client ID (safe to keep for web support)
     clientId:
-        "352717362565-mjjnb1nhd53tvg7ed34dlijo8nub0sib.apps.googleusercontent.com",
+        "712198995530-9dvnog7dj51m0vdk2olioaou6hu8kd4g.apps.googleusercontent.com",
   );
 
   try {
