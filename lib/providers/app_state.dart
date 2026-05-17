@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
@@ -13,6 +14,9 @@ import '../models/order.dart';
 class AppState extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  StreamSubscription<QuerySnapshot>? _productsSubscription;
+  StreamSubscription<QuerySnapshot>? _globalOrdersSubscription;
+  StreamSubscription<QuerySnapshot>? _userOrdersSubscription;
 
   // ✅ Google Sign In - Works for both Mobile & Web
   late final GoogleSignIn _googleSignIn;
@@ -20,11 +24,14 @@ class AppState extends ChangeNotifier {
   User? _user;
   User? get user => _user;
   bool get isAuthenticated => _user != null;
+  bool _isAdminAuthenticated = false;
+  bool get isAdminAuthenticated => _isAdminAuthenticated;
 
   List<Product> _products = [];
   List<CartItem> _cart = [];
   List<Product> _favorites = [];
   List<BBOrder> _orders = [];
+  List<BBOrder> _adminOrders = [];
 
   // Local storage variables
   String? _localUsersFilePath;
@@ -34,6 +41,7 @@ class AppState extends ChangeNotifier {
   List<CartItem> get cart => _cart;
   List<Product> get favorites => _favorites;
   List<BBOrder> get orders => _orders;
+  List<BBOrder> get adminOrders => _adminOrders;
 
   double get cartTotal => _cart.fold(0.0, (sum, item) => sum + item.totalPrice);
   int get cartItemCount => _cart.fold(0, (sum, item) => sum + item.quantity);
@@ -41,8 +49,10 @@ class AppState extends ChangeNotifier {
 
   AppState() {
     _initGoogleSignIn();
-    _checkAuthState();
     _loadSampleProducts();
+    _listenToProducts();
+    _listenToGlobalOrders();
+    _checkAuthState();
     _initLocalStorage();
   }
 
@@ -65,11 +75,15 @@ class AppState extends ChangeNotifier {
       if (user != null) {
         _loadUserLocalData(user.uid);
         _loadUserFromFirestore(user.uid);
+        _listenToUserOrders(user.uid);
       } else {
         _currentUserData = {};
         _cart.clear();
         _favorites.clear();
         _orders.clear();
+        _userOrdersSubscription?.cancel();
+        _userOrdersSubscription = null;
+        _isAdminAuthenticated = false;
       }
 
       notifyListeners();
@@ -231,6 +245,148 @@ class AppState extends ChangeNotifier {
       }
     } catch (e) {
       print("❌ Error loading local user data: $e");
+    }
+  }
+
+  void _listenToProducts() {
+    _productsSubscription?.cancel();
+    _productsSubscription = _firestore
+        .collection('products')
+        .orderBy('name')
+        .snapshots()
+        .listen((snapshot) {
+      if (snapshot.docs.isNotEmpty) {
+        _products = snapshot.docs.map((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+          return Product(
+            id: data['id'] ?? doc.id,
+            name: data['name'] ?? '',
+            description: data['description'] ?? '',
+            price: (data['price'] as num?)?.toDouble() ?? 0.0,
+            imageUrl: data['imageUrl'] ?? '',
+            category: data['category'] ?? '',
+            tags: List<String>.from(data['tags'] ?? []),
+            stock: (data['stock'] as num?)?.toInt() ?? 0,
+          );
+        }).toList();
+        notifyListeners();
+      }
+    }, onError: (e) {
+      print("❌ Product listener error: $e");
+    });
+  }
+
+  void _listenToGlobalOrders() {
+    _globalOrdersSubscription?.cancel();
+    _globalOrdersSubscription = _firestore
+        .collection('orders')
+        .orderBy('orderDate', descending: true)
+        .snapshots()
+        .listen((snapshot) {
+      _adminOrders = snapshot.docs
+          .map((doc) => _buildOrderFromData(doc.data() as Map<String, dynamic>))
+          .toList();
+      notifyListeners();
+    }, onError: (e) {
+      print("❌ Global order listener error: $e");
+    });
+  }
+
+  void _listenToUserOrders(String uid) {
+    _userOrdersSubscription?.cancel();
+    _userOrdersSubscription = _firestore
+        .collection('orders')
+        .where('customerId', isEqualTo: uid)
+        .orderBy('orderDate', descending: true)
+        .snapshots()
+        .listen((snapshot) {
+      _orders = snapshot.docs
+          .map((doc) => _buildOrderFromData(doc.data() as Map<String, dynamic>))
+          .toList();
+      notifyListeners();
+    }, onError: (e) {
+      print("❌ User order listener error: $e");
+    });
+  }
+
+  BBOrder _buildOrderFromData(Map<String, dynamic> data) {
+    final rawDate = data['orderDate'];
+    DateTime orderDate;
+    if (rawDate is Timestamp) {
+      orderDate = rawDate.toDate();
+    } else if (rawDate is String) {
+      orderDate = DateTime.tryParse(rawDate) ?? DateTime.now();
+    } else {
+      orderDate = DateTime.now();
+    }
+
+    final itemsData = List<dynamic>.from(data['items'] ?? []);
+    final items = itemsData.map((item) {
+      final itemMap = Map<String, dynamic>.from(item);
+      final product = Product(
+        id: itemMap['productId'] ?? '',
+        name: itemMap['productName'] ?? '',
+        description: itemMap['productDescription'] ?? '',
+        price: (itemMap['productPrice'] as num?)?.toDouble() ?? 0.0,
+        imageUrl: itemMap['productImageUrl'] ?? '',
+        category: itemMap['productCategory'] ?? '',
+        tags: List<String>.from(itemMap['productTags'] ?? []),
+      );
+      return CartItem(product: product)
+        ..quantity = (itemMap['quantity'] as num?)?.toInt() ?? 1;
+    }).toList();
+
+    return BBOrder(
+      id: data['id'] ?? '',
+      items: items,
+      totalAmount: (data['totalAmount'] as num?)?.toDouble() ?? 0.0,
+      orderDate: orderDate,
+      status: _parseOrderStatus(data['status'] ?? 'OrderStatus.confirmed'),
+      deliveryAddress: data['deliveryAddress'] ?? '',
+      customerName: data['customerName'],
+      specialInstructions: data['specialInstructions'],
+    );
+  }
+
+  Future<void> _saveOrderToFirestore(BBOrder order) async {
+    try {
+      await _firestore.collection('orders').doc(order.id).set({
+        'id': order.id,
+        'customerId': _user?.uid ?? '',
+        'customerEmail': _user?.email ?? '',
+        'customerName': order.customerName ?? _user?.displayName ?? '',
+        'deliveryAddress': order.deliveryAddress,
+        'status': order.status.toString(),
+        'orderDate': order.orderDate.toIso8601String(),
+        'totalAmount': order.totalAmount,
+        'specialInstructions': order.specialInstructions ?? '',
+        'items': order.items.map((item) {
+          return {
+            'productId': item.product.id,
+            'productName': item.product.name,
+            'productDescription': item.product.description,
+            'productPrice': item.product.price,
+            'productImageUrl': item.product.imageUrl,
+            'productCategory': item.product.category,
+            'productTags': item.product.tags,
+            'quantity': item.quantity,
+          };
+        }).toList(),
+      }, SetOptions(merge: true));
+      print("✅ Order saved to Firestore: ${order.id}");
+    } catch (e) {
+      print("❌ Error saving order to Firestore: $e");
+    }
+  }
+
+  Future<void> _updateOrderDocument(BBOrder order) async {
+    try {
+      await _firestore.collection('orders').doc(order.id).set({
+        'status': order.status.toString(),
+      }, SetOptions(merge: true));
+      print("✅ Order updated in Firestore: ${order.id}");
+    } catch (e) {
+      print("❌ Error updating order in Firestore: $e");
     }
   }
 
@@ -505,6 +661,7 @@ class AppState extends ChangeNotifier {
       await _googleSignIn.signOut();
       await _auth.signOut();
       _user = null;
+      _isAdminAuthenticated = false;
       _cart.clear();
       _favorites.clear();
       _orders.clear();
@@ -879,6 +1036,7 @@ class AppState extends ChangeNotifier {
         'imageUrl': product.imageUrl,
         'category': product.category,
         'tags': product.tags,
+        'stock': product.stock,
       });
       print("✅ Product saved to Firestore: ${product.name}");
     } catch (e) {
@@ -891,32 +1049,52 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void updateOrderStatus(String orderId, OrderStatus status) {
-    final index = _orders.indexWhere((o) => o.id == orderId);
-    if (index != -1) {
-      _orders[index] = _orders[index].copyWith(status: status);
+  void setAdminAuthenticated(bool value) {
+    _isAdminAuthenticated = value;
+    notifyListeners();
+  }
 
-      // Update in local storage and Firestore if user is logged in
-      if (_user != null) {
-        _updateUserLocalData({
-          'orders': _orders
-              .map((order) => {
-                    'id': order.id,
-                    'totalAmount': order.totalAmount,
-                    'orderDate': order.orderDate.toIso8601String(),
-                    'status': order.status.toString(),
-                    'deliveryAddress': order.deliveryAddress,
-                  })
-              .toList(),
-        });
-        _saveUserToFirestore(_user!);
-      }
-      notifyListeners();
+  void updateOrderStatus(String orderId, OrderStatus status) {
+    final userOrderIndex = _orders.indexWhere((o) => o.id == orderId);
+    if (userOrderIndex != -1) {
+      _orders[userOrderIndex] = _orders[userOrderIndex].copyWith(status: status);
     }
+
+    final adminOrderIndex = _adminOrders.indexWhere((o) => o.id == orderId);
+    if (adminOrderIndex != -1) {
+      _adminOrders[adminOrderIndex] = _adminOrders[adminOrderIndex].copyWith(status: status);
+    }
+
+    if (userOrderIndex == -1 && adminOrderIndex == -1) {
+      return;
+    }
+
+    // Update in local storage and Firestore if user is logged in
+    if (_user != null) {
+      _updateUserLocalData({
+        'orders': _orders
+            .map((order) => {
+                  'id': order.id,
+                  'totalAmount': order.totalAmount,
+                  'orderDate': order.orderDate.toIso8601String(),
+                  'status': order.status.toString(),
+                  'deliveryAddress': order.deliveryAddress,
+                })
+            .toList(),
+      });
+      _saveUserToFirestore(_user!);
+    }
+
+    _updateOrderDocument(adminOrderIndex != -1 ? _adminOrders[adminOrderIndex] : _orders[userOrderIndex]);
+    notifyListeners();
   }
 
   // ==================== CART METHODS ====================
-  void addToCart(Product product) {
+  bool addToCart(Product product) {
+    if (_user == null) {
+      return false;
+    }
+
     final index = _cart.indexWhere((i) => i.product.id == product.id);
     if (index >= 0) {
       _cart[index].quantity++;
@@ -925,21 +1103,20 @@ class AppState extends ChangeNotifier {
     }
 
     // Save to local storage and Firestore if user is logged in
-    if (_user != null) {
-      _updateUserLocalData({
-        'cart': _cart
-            .map((item) => {
-                  'productId': item.product.id,
-                  'productName': item.product.name,
-                  'productPrice': item.product.price,
-                  'quantity': item.quantity,
-                })
-            .toList(),
-      });
-      _saveUserToFirestore(_user!);
-    }
+    _updateUserLocalData({
+      'cart': _cart
+          .map((item) => {
+                'productId': item.product.id,
+                'productName': item.product.name,
+                'productPrice': item.product.price,
+                'quantity': item.quantity,
+              })
+          .toList(),
+    });
+    _saveUserToFirestore(_user!);
 
     notifyListeners();
+    return true;
   }
 
   void removeFromCart(Product product) {
@@ -1037,6 +1214,7 @@ class AppState extends ChangeNotifier {
       orderDate: DateTime.now(),
       status: OrderStatus.confirmed,
       deliveryAddress: address,
+      customerName: _user?.displayName ?? _user?.email,
     );
 
     _orders.insert(0, newOrder);
@@ -1051,10 +1229,12 @@ class AppState extends ChangeNotifier {
                   'orderDate': order.orderDate.toIso8601String(),
                   'status': order.status.toString(),
                   'deliveryAddress': order.deliveryAddress,
+                  'customerName': order.customerName,
                 })
             .toList(),
       });
       _saveUserToFirestore(_user!);
+      _saveOrderToFirestore(newOrder);
     }
 
     _cart.clear();
@@ -1086,5 +1266,13 @@ class AppState extends ChangeNotifier {
     } catch (e) {
       print("❌ Error clearing local data: $e");
     }
+  }
+
+  @override
+  void dispose() {
+    _productsSubscription?.cancel();
+    _globalOrdersSubscription?.cancel();
+    _userOrdersSubscription?.cancel();
+    super.dispose();
   }
 }

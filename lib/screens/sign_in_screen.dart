@@ -385,7 +385,8 @@ class _SignInScreenState extends State<SignInScreen>
           contentPadding: const EdgeInsets.symmetric(vertical: 16),
         ),
         keyboardType: TextInputType.emailAddress,
-        style: TextStyle(fontSize: isSmallScreen ? 14 : 15),
+        cursorColor: _kPurple,
+        style: TextStyle(color: _kText, fontSize: isSmallScreen ? 14 : 15),
       ),
     );
   }
@@ -439,7 +440,8 @@ class _SignInScreenState extends State<SignInScreen>
           fillColor: _kWhite,
           contentPadding: const EdgeInsets.symmetric(vertical: 16),
         ),
-        style: TextStyle(fontSize: isSmallScreen ? 14 : 15),
+        cursorColor: _kPurple,
+        style: TextStyle(color: _kText, fontSize: isSmallScreen ? 14 : 15),
       ),
     );
   }
@@ -1073,7 +1075,8 @@ class _SignUpScreenState extends State<SignUpScreen>
           contentPadding: const EdgeInsets.symmetric(vertical: 16),
         ),
         keyboardType: keyboardType,
-        style: TextStyle(fontSize: isSmallScreen ? 14 : 15),
+        cursorColor: _kPurple,
+        style: TextStyle(color: _kText, fontSize: isSmallScreen ? 14 : 15),
       ),
     );
   }
@@ -1132,7 +1135,8 @@ class _SignUpScreenState extends State<SignUpScreen>
           fillColor: _kWhite,
           contentPadding: const EdgeInsets.symmetric(vertical: 16),
         ),
-        style: TextStyle(fontSize: isSmallScreen ? 14 : 15),
+        cursorColor: _kPurple,
+        style: TextStyle(color: _kText, fontSize: isSmallScreen ? 14 : 15),
       ),
     );
   }

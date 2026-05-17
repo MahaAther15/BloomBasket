@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../app_theme.dart';
+import '../providers/app_state.dart';
 
 class BotanicalBottomNavBar extends StatelessWidget {
   final int currentIndex;
@@ -22,7 +24,8 @@ class BotanicalBottomNavBar extends StatelessWidget {
         context.go('/cart');
         break;
       case 3:
-        context.go('/profile');
+        final isAuthenticated = Provider.of<AppState>(context, listen: false).isAuthenticated;
+        context.go(isAuthenticated ? '/profile' : '/signin');
         break;
     }
   }

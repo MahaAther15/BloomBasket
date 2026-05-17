@@ -433,6 +433,19 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             Expanded(
               child: GestureDetector(
                 onTap: () {
+                  if (!appState.isAuthenticated) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        backgroundColor: Colors.redAccent,
+                        behavior: SnackBarBehavior.floating,
+                        content: Text('Please sign in before adding items to your cart.'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                    context.go('/signin');
+                    return;
+                  }
+
                   final cartItemIndex = appState.cart.indexWhere(
                     (item) => item.product.id == product.id,
                   );

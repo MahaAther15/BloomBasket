@@ -34,6 +34,7 @@ class _CustomizeGiftScreenState extends State<CustomizeGiftScreen>
   };
 
   final TextEditingController _messageController = TextEditingController();
+  int _selectedTabIndex = 0;
 
   final List<String> _flowerOptions = [
     'Roses',
@@ -70,6 +71,14 @@ class _CustomizeGiftScreenState extends State<CustomizeGiftScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _selectedTabIndex = _tabController.index;
+    _tabController.addListener(() {
+      if (mounted && !_tabController.indexIsChanging) {
+        setState(() {
+          _selectedTabIndex = _tabController.index;
+        });
+      }
+    });
     for (var flower in _flowerOptions) {
       _selectedFlowers[flower] = 0;
     }
@@ -129,6 +138,7 @@ class _CustomizeGiftScreenState extends State<CustomizeGiftScreen>
         color: Colors.white.withOpacity(0.3),
         child: Column(
           children: [
+            _buildCustomizationPreview(isDark),
             Expanded(
               child: TabBarView(
                 controller: _tabController,
@@ -139,6 +149,77 @@ class _CustomizeGiftScreenState extends State<CustomizeGiftScreen>
               ),
             ),
             _buildFooter(isDark),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCustomizationPreview(bool isDark) {
+    final isBouquet = _selectedTabIndex == 0;
+    final imageAsset = isBouquet
+        ? 'assets/images/flower14.png'
+        : 'assets/images/flower.png';
+    final title = isBouquet ? 'DUMMY BOUQUET PREVIEW' : 'DUMMY BASKET PREVIEW';
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          children: [
+            SizedBox(
+              height: 160,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Image.asset(
+                  imageAsset,
+                  width: double.infinity,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) => Center(
+                    child: Icon(
+                      isBouquet ? Icons.local_florist : Icons.shopping_basket,
+                      size: 48,
+                      color: _kPurple,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.black : Colors.black,
+                  ),
+                ),
+                Text(
+                  'Preview',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.primaryGreen,
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -317,11 +398,24 @@ class _CustomizeGiftScreenState extends State<CustomizeGiftScreen>
                 description: details,
                 price: totalPrice,
                 imageUrl: isBouquet
-                    ? 'assets/images/blackrose.webp'
+                    ? 'assets/images/flower14.png'
                     : 'assets/images/flower.png',
                 category: 'Bespoke',
                 tags: ['Custom', 'Bespoke'],
               );
+
+              if (!appState.isAuthenticated) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    backgroundColor: Colors.redAccent,
+                    behavior: SnackBarBehavior.floating,
+                    content: Text('Please sign in before adding items to your cart.'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+                context.go('/signin');
+                return;
+              }
 
               appState.addToCart(customProduct);
 

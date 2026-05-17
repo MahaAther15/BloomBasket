@@ -17,6 +17,55 @@ class ProfileScreen extends StatelessWidget {
     final screenSize = MediaQuery.of(context).size;
     final isSmallScreen = screenSize.width < 600;
 
+    if (!appState.isAuthenticated) {
+      return Scaffold(
+        backgroundColor: AppTheme.alabaster,
+        bottomNavigationBar: const BotanicalBottomNavBar(currentIndex: 3),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.person_outline,
+                  size: 72,
+                  color: AppTheme.primaryGreen,
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  'You are not signed in',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Sign in to view your profile, orders and cart details.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppTheme.outline.withOpacity(0.8),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () => context.go('/signin'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryGreen,
+                    minimumSize: const Size(double.infinity, 48),
+                  ),
+                  child: const Text('SIGN IN'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppTheme.alabaster,
       bottomNavigationBar: const BotanicalBottomNavBar(currentIndex: 3),
