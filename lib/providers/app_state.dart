@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
@@ -29,6 +30,9 @@ class AppState extends ChangeNotifier {
   String? _localUsersFilePath;
   Map<String, dynamic> _currentUserData = {};
 
+  // Web in-memory fallback for local storage (used when kIsWeb)
+  Map<String, dynamic>? _webLocalData;
+
   List<Product> get products => _products;
   List<CartItem> get cart => _cart;
   List<Product> get favorites => _favorites;
@@ -37,6 +41,7 @@ class AppState extends ChangeNotifier {
   double get cartTotal => _cart.fold(0.0, (sum, item) => sum + item.totalPrice);
   int get cartItemCount => _cart.fold(0, (sum, item) => sum + item.quantity);
   bool get isSignedIn => _user != null;
+  double get totalRevenue => _orders.fold(0.0, (sum, o) => sum + o.totalAmount);
 
   AppState() {
     _initGoogleSignIn();
@@ -78,6 +83,18 @@ class AppState extends ChangeNotifier {
   // ✅ Initialize local storage
   Future<void> _initLocalStorage() async {
     try {
+      if (kIsWeb) {
+        // Use in-memory storage on web (no file system access)
+        _localUsersFilePath = ':web:';
+        _webLocalData = {
+          'users': [],
+          'version': '1.0',
+          'lastUpdated': DateTime.now().toIso8601String()
+        };
+        print("✅ Web local storage initialized (in-memory)");
+        return;
+      }
+
       final directory = await getApplicationDocumentsDirectory();
       _localUsersFilePath = '${directory.path}/bloombasket_users.json';
 
@@ -105,6 +122,54 @@ class AppState extends ChangeNotifier {
         await _initLocalStorage();
       }
 
+      // Web in-memory storage
+      if (_localUsersFilePath == ':web:') {
+        final users = _webLocalData!['users'] as List<dynamic>;
+        int existingIndex = users.indexWhere((u) => u['uid'] == user.uid);
+
+        final userData = {
+          'uid': user.uid,
+          'email': user.email,
+          'displayName': username ?? user.displayName ?? '',
+          'photoURL': user.photoURL ?? '',
+          'createdAt': DateTime.now().toIso8601String(),
+          'lastLoginAt': DateTime.now().toIso8601String(),
+          'favorites': _favorites.map((p) => p.id).toList(),
+'cart': _cart
+              .map((item) => {
+                    'productId': item.product.id,
+                    'productName': item.product.name,
+                    'productDescription': item.product.description,
+                    'productPrice': item.product.price,
+                    'imageUrl': item.product.imageUrl,
+                    'category': item.product.category,
+                    'tags': item.product.tags,
+                    'quantity': item.quantity,
+                  })
+              .toList(),
+          'orders': _orders
+              .map((order) => {
+                    'id': order.id,
+                    'totalAmount': order.totalAmount,
+                    'orderDate': order.orderDate.toIso8601String(),
+                    'status': order.status.toString(),
+                    'deliveryAddress': order.deliveryAddress,
+                  })
+              .toList(),
+        };
+
+        if (existingIndex != -1) {
+          users[existingIndex] = userData;
+        } else {
+          users.add(userData);
+        }
+
+        _webLocalData!['lastUpdated'] = DateTime.now().toIso8601String();
+        _currentUserData = userData;
+        print("✅ (web) User data saved locally: ${user.email}");
+        return;
+      }
+
       final file = File(_localUsersFilePath!);
       final contents = await file.readAsString();
       Map<String, dynamic> data = jsonDecode(contents);
@@ -122,11 +187,15 @@ class AppState extends ChangeNotifier {
         'createdAt': DateTime.now().toIso8601String(),
         'lastLoginAt': DateTime.now().toIso8601String(),
         'favorites': _favorites.map((p) => p.id).toList(),
-        'cart': _cart
+'cart': _cart
             .map((item) => {
                   'productId': item.product.id,
                   'productName': item.product.name,
+                  'productDescription': item.product.description,
                   'productPrice': item.product.price,
+                  'imageUrl': item.product.imageUrl,
+                  'category': item.product.category,
+                  'tags': item.product.tags,
                   'quantity': item.quantity,
                 })
             .toList(),
@@ -167,13 +236,18 @@ class AppState extends ChangeNotifier {
         await _initLocalStorage();
       }
 
-      final file = File(_localUsersFilePath!);
-      if (!await file.exists()) return;
+      // Web in-memory storage
+      Map<String, dynamic>? data;
+      if (_localUsersFilePath == ':web:') {
+        data = _webLocalData;
+      } else {
+        final file = File(_localUsersFilePath!);
+        if (!await file.exists()) return;
+        final contents = await file.readAsString();
+        data = jsonDecode(contents);
+      }
 
-      final contents = await file.readAsString();
-      Map<String, dynamic> data = jsonDecode(contents);
-
-      List<dynamic> users = data['users'] ?? [];
+      List<dynamic> users = data?['users'] ?? [];
       final userData = users.firstWhere(
         (u) => u['uid'] == uid,
         orElse: () => null,
@@ -192,16 +266,16 @@ class AppState extends ChangeNotifier {
         List<dynamic> cartItems = userData['cart'] ?? [];
         _cart = [];
         for (var item in cartItems) {
-          final product = _products.firstWhere(
+final product = _products.firstWhere(
             (p) => p.id == item['productId'],
             orElse: () => Product(
               id: item['productId'],
               name: item['productName'],
-              description: '',
+              description: (item['productDescription'] ?? '') as String,
               price: (item['productPrice'] as num).toDouble(),
-              imageUrl: '',
-              category: '',
-              tags: [],
+              imageUrl: (item['imageUrl'] ?? '') as String,
+              category: (item['category'] ?? '') as String,
+              tags: (item['tags'] ?? []).map((e) => e.toString()).toList(),
             ),
           );
           final cartItem = CartItem(product: product);
@@ -239,6 +313,21 @@ class AppState extends ChangeNotifier {
         await _initLocalStorage();
       }
 
+      // Web in-memory storage
+      if (_localUsersFilePath == ':web:') {
+        final users = _webLocalData!['users'] as List<dynamic>;
+        int index = users.indexWhere((u) => u['uid'] == _user!.uid);
+
+        if (index != -1) {
+          users[index] = {...users[index], ...updates};
+          _webLocalData!['users'] = users;
+          _webLocalData!['lastUpdated'] = DateTime.now().toIso8601String();
+          _currentUserData = users[index];
+          print("✅ (web) Local user data updated");
+        }
+        return;
+      }
+
       final file = File(_localUsersFilePath!);
       final contents = await file.readAsString();
       Map<String, dynamic> data = jsonDecode(contents);
@@ -269,11 +358,15 @@ class AppState extends ChangeNotifier {
         'photoURL': user.photoURL ?? '',
         'lastLoginAt': FieldValue.serverTimestamp(),
         'favorites': _favorites.map((p) => p.id).toList(),
-        'cart': _cart
+'cart': _cart
             .map((item) => {
                   'productId': item.product.id,
                   'productName': item.product.name,
+                  'productDescription': item.product.description,
                   'productPrice': item.product.price,
+                  'imageUrl': item.product.imageUrl,
+                  'category': item.product.category,
+                  'tags': item.product.tags,
                   'quantity': item.quantity,
                 })
             .toList(),
@@ -309,16 +402,16 @@ class AppState extends ChangeNotifier {
         List<dynamic> cartData = userData['cart'] ?? [];
         _cart = [];
         for (var item in cartData) {
-          final product = _products.firstWhere(
+final product = _products.firstWhere(
             (p) => p.id == item['productId'],
             orElse: () => Product(
               id: item['productId'],
               name: item['productName'],
-              description: '',
+              description: (item['productDescription'] ?? '') as String,
               price: (item['productPrice'] as num).toDouble(),
-              imageUrl: '',
-              category: '',
-              tags: [],
+              imageUrl: (item['imageUrl'] ?? '') as String,
+              category: (item['category'] ?? '') as String,
+              tags: (item['tags'] ?? []).map((e) => e.toString()).toList(),
             ),
           );
           _cart.add(CartItem(product: product)..quantity = item['quantity']);
@@ -479,7 +572,11 @@ class AppState extends ChangeNotifier {
               .map((item) => {
                     'productId': item.product.id,
                     'productName': item.product.name,
+                    'productDescription': item.product.description,
                     'productPrice': item.product.price,
+                    'imageUrl': item.product.imageUrl,
+                    'category': item.product.category,
+                    'tags': item.product.tags,
                     'quantity': item.quantity,
                   })
               .toList(),
@@ -526,6 +623,10 @@ class AppState extends ChangeNotifier {
         await _initLocalStorage();
       }
 
+      if (_localUsersFilePath == ':web:') {
+        return List<Map<String, dynamic>>.from(_webLocalData?['users'] ?? []);
+      }
+
       final file = File(_localUsersFilePath!);
       if (!await file.exists()) return [];
 
@@ -543,12 +644,6 @@ class AppState extends ChangeNotifier {
   Map<String, dynamic> getCurrentUserData() {
     return _currentUserData;
   }
-
-  void addProduct(Product product) {
-    _products.insert(0, product);
-    notifyListeners();
-  }
-
   void _loadSampleProducts() {
     _products = [
       Product(
@@ -927,7 +1022,11 @@ class AppState extends ChangeNotifier {
             .map((item) => {
                   'productId': item.product.id,
                   'productName': item.product.name,
+                  'productDescription': item.product.description,
                   'productPrice': item.product.price,
+                  'imageUrl': item.product.imageUrl,
+                  'category': item.product.category,
+                  'tags': item.product.tags,
                   'quantity': item.quantity,
                 })
             .toList(),
@@ -948,7 +1047,11 @@ class AppState extends ChangeNotifier {
             .map((item) => {
                   'productId': item.product.id,
                   'productName': item.product.name,
+                  'productDescription': item.product.description,
                   'productPrice': item.product.price,
+                  'imageUrl': item.product.imageUrl,
+                  'category': item.product.category,
+                  'tags': item.product.tags,
                   'quantity': item.quantity,
                 })
             .toList(),
@@ -987,7 +1090,11 @@ class AppState extends ChangeNotifier {
               .map((item) => {
                     'productId': item.product.id,
                     'productName': item.product.name,
+                    'productDescription': item.product.description,
                     'productPrice': item.product.price,
+                    'imageUrl': item.product.imageUrl,
+                    'category': item.product.category,
+                    'tags': item.product.tags,
                     'quantity': item.quantity,
                   })
               .toList(),
@@ -1069,13 +1176,18 @@ class AppState extends ChangeNotifier {
         await _initLocalStorage();
       }
 
-      final file = File(_localUsersFilePath!);
       final initialData = {
         'users': [],
         'version': '1.0',
         'lastUpdated': DateTime.now().toIso8601String()
       };
-      await file.writeAsString(jsonEncode(initialData));
+
+      if (_localUsersFilePath == ':web:') {
+        _webLocalData = initialData;
+      } else {
+        final file = File(_localUsersFilePath!);
+        await file.writeAsString(jsonEncode(initialData));
+      }
 
       _currentUserData = {};
       print("✅ All local data cleared");
