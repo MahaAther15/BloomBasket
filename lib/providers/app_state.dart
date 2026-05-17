@@ -90,14 +90,14 @@ class AppState extends ChangeNotifier {
     });
   }
 
-  // ✅ Initialize local storage
+  // ✅ Save user data locally
+  // Initialize local storage
   Future<void> _initLocalStorage() async {
     if (kIsWeb) return;
     try {
       final directory = await getApplicationDocumentsDirectory();
       _localUsersFilePath = '${directory.path}/bloombasket_users.json';
 
-      // Create file if it doesn't exist
       final file = File(_localUsersFilePath!);
       if (!await file.exists()) {
         final initialData = {
@@ -108,13 +108,12 @@ class AppState extends ChangeNotifier {
         await file.writeAsString(jsonEncode(initialData));
       }
 
-      print("✅ Local storage initialized at: $_localUsersFilePath");
+      print("Local storage initialized at: $_localUsersFilePath");
     } catch (e) {
-      print("❌ Error initializing local storage: $e");
+      print("Error initializing local storage: $e");
     }
   }
 
-  // ✅ Save user data locally
   Future<void> _saveUserLocalData(User user, {String? username}) async {
     if (kIsWeb) return;
     try {
@@ -708,8 +707,6 @@ class AppState extends ChangeNotifier {
     return _currentUserData;
   }
 
-
-
   void _loadSampleProducts() {
     _products = [
       Product(
@@ -1018,8 +1015,8 @@ class AppState extends ChangeNotifier {
   void addProduct(Product product) {
     _products.insert(0, product);
 
-    // Save to Firestore if user is logged in (as admin)
-    if (_user != null) {
+    // Save to Firestore if a Firebase user is logged in or if admin authenticated
+    if (_user != null || _isAdminAuthenticated) {
       _saveProductToFirestore(product);
     }
 
@@ -1057,12 +1054,14 @@ class AppState extends ChangeNotifier {
   void updateOrderStatus(String orderId, OrderStatus status) {
     final userOrderIndex = _orders.indexWhere((o) => o.id == orderId);
     if (userOrderIndex != -1) {
-      _orders[userOrderIndex] = _orders[userOrderIndex].copyWith(status: status);
+      _orders[userOrderIndex] =
+          _orders[userOrderIndex].copyWith(status: status);
     }
 
     final adminOrderIndex = _adminOrders.indexWhere((o) => o.id == orderId);
     if (adminOrderIndex != -1) {
-      _adminOrders[adminOrderIndex] = _adminOrders[adminOrderIndex].copyWith(status: status);
+      _adminOrders[adminOrderIndex] =
+          _adminOrders[adminOrderIndex].copyWith(status: status);
     }
 
     if (userOrderIndex == -1 && adminOrderIndex == -1) {
@@ -1085,7 +1084,9 @@ class AppState extends ChangeNotifier {
       _saveUserToFirestore(_user!);
     }
 
-    _updateOrderDocument(adminOrderIndex != -1 ? _adminOrders[adminOrderIndex] : _orders[userOrderIndex]);
+    _updateOrderDocument(adminOrderIndex != -1
+        ? _adminOrders[adminOrderIndex]
+        : _orders[userOrderIndex]);
     notifyListeners();
   }
 
