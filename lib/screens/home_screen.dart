@@ -28,6 +28,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   String _currentLocation = 'Detecting Location...';
   String _selectedCategory = 'All';
+  String _searchQuery = '';
   final _searchController = TextEditingController();
 
   final List<String> _categories = [
@@ -63,14 +64,29 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final appState = Provider.of<AppState>(context);
-    final filteredProducts = _selectedCategory == 'All'
-        ? appState.products
-        : appState.products.where((p) {
-            final cat = _selectedCategory.toLowerCase();
-            return p.category.toLowerCase().contains(cat) ||
-                p.name.toLowerCase().contains(cat) ||
-                p.tags.any((t) => t.toLowerCase().contains(cat));
-          }).toList();
+    var products = appState.products;
+
+    // Filter by category
+    if (_selectedCategory != 'All') {
+      final cat = _selectedCategory.toLowerCase();
+      products = products.where((p) {
+        return p.category.toLowerCase().contains(cat) ||
+            p.name.toLowerCase().contains(cat) ||
+            p.tags.any((t) => t.toLowerCase().contains(cat));
+      }).toList();
+    }
+
+    // Filter by search query
+    if (_searchQuery.trim().isNotEmpty) {
+      final query = _searchQuery.toLowerCase().trim();
+      products = products.where((p) {
+        return p.name.toLowerCase().contains(query) ||
+            p.category.toLowerCase().contains(query) ||
+            p.tags.any((t) => t.toLowerCase().contains(query));
+      }).toList();
+    }
+
+    final filteredProducts = products;
 
     return Scaffold(
       backgroundColor: _kBg,
@@ -209,12 +225,13 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(
               child: TextField(
                 controller: _searchController,
+                onChanged: (value) => setState(() => _searchQuery = value),
                 style: TextStyle(
                   fontSize: 14 * scaleFactor,
                   color: _kText,
                 ),
                 decoration: InputDecoration(
-                  hintText: 'Search',
+                  hintText: 'Search flowers...',
                   hintStyle:
                       TextStyle(color: _kTextSub, fontSize: 14 * scaleFactor),
                   border: InputBorder.none,
@@ -225,6 +242,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
+            if (_searchQuery.isNotEmpty)
+              GestureDetector(
+                onTap: () {
+                  _searchController.clear();
+                  setState(() => _searchQuery = '');
+                },
+                child: Padding(
+                  padding: EdgeInsets.only(right: 8 * scaleFactor),
+                  child: Icon(Icons.close, color: _kTextSub, size: 18 * scaleFactor),
+                ),
+              ),
             Container(
               width: 36 * scaleFactor,
               height: 36 * scaleFactor,
@@ -233,7 +261,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: _kPurple,
                 borderRadius: BorderRadius.circular(18 * scaleFactor),
               ),
-              child: Icon(Icons.mic, color: _kWhite, size: 18 * scaleFactor),
+              child: Icon(Icons.search, color: _kWhite, size: 18 * scaleFactor),
             ),
           ],
         ),

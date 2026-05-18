@@ -220,7 +220,6 @@ class _CustomizeGiftScreenState extends State<CustomizeGiftScreen>
         color: _kPurple.withOpacity(0.08),
         child: Column(
           children: [
-            _buildCustomizationPreview(isDark),
             Expanded(
               child: TabBarView(
                 controller: _tabController,
@@ -343,15 +342,19 @@ class _CustomizeGiftScreenState extends State<CustomizeGiftScreen>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        isBouquet ? 'YOUR CUSTOM BOUQUET' : 'YOUR CUSTOM BASKET',
-                        style: GoogleFonts.poppins(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                          color: _kText,
-                          letterSpacing: 1,
+                      Expanded(
+                        child: Text(
+                          isBouquet ? 'YOUR CUSTOM BOUQUET' : 'YOUR CUSTOM BASKET',
+                          style: GoogleFonts.poppins(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            color: _kText,
+                            letterSpacing: 1,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
+                      const SizedBox(width: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
@@ -417,6 +420,8 @@ class _CustomizeGiftScreenState extends State<CustomizeGiftScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          _buildCustomizationPreview(isDark),
+          const SizedBox(height: 24),
           _buildSectionTitle('1. CHOOSE YOUR BLOOMS', isDark),
           const SizedBox(height: 4),
           Text(
@@ -521,6 +526,8 @@ class _CustomizeGiftScreenState extends State<CustomizeGiftScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          _buildCustomizationPreview(isDark),
+          const SizedBox(height: 24),
           _buildSectionTitle('1. SELECT BASKET CASING STYLE', isDark),
           const SizedBox(height: 16),
           ..._basketOptions.map((basket) => _buildBasketOptionCard(basket)),
