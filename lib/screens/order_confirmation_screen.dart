@@ -398,29 +398,7 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
   }
 
   void _navigateWithAnimation(BuildContext context, String route) {
-    Navigator.pushReplacement(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            context.go(route);
-          });
-          return const SizedBox.shrink();
-        },
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          var begin = const Offset(1.0, 0.0);
-          var end = Offset.zero;
-          var curve = Curves.easeInOutCubic;
-          var tween =
-              Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-          return SlideTransition(
-            position: animation.drive(tween),
-            child: child,
-          );
-        },
-        transitionDuration: const Duration(milliseconds: 500),
-      ),
-    );
+    context.go(route);
   }
 }
 

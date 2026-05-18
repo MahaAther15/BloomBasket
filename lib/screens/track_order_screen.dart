@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../app_theme.dart';
 
 // ─── Shared Palette (Matching Your App) ──────────────────────────────────────
@@ -94,7 +95,13 @@ class _TrackOrderScreenState extends State<TrackOrderScreen>
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: _kText),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            } else {
+              context.go('/');
+            }
+          },
         ),
         title: const Text(
           'TRACK ORDER',
