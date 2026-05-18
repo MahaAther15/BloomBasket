@@ -83,14 +83,14 @@ class _HomeScreenState extends State<HomeScreen> {
             final screenWidth = MediaQuery.of(context).size.width;
             final scaleFactor = (screenWidth / 375).clamp(0.8, 1.2);
 
+            final bottomNavHeight = 85 * scaleFactor;
             return SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: IntrinsicHeight(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+              child: Padding(
+                padding: EdgeInsets.only(bottom: bottomNavHeight),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                       _buildHeader(appState, scaleFactor),
                       _buildSearchBar(scaleFactor),
                       _buildOfferBanner(scaleFactor),
@@ -100,7 +100,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       _buildOccasionSection(appState.products, scaleFactor),
                       const SizedBox(height: 24),
                     ],
-                  ),
                 ),
               ),
             );
@@ -153,7 +152,9 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           GestureDetector(
-            onTap: () => context.go('/profile'),
+            onTap: () => appState.isAuthenticated
+                ? context.go('/profile')
+                : context.go('/signin'),
             child: Container(
               width: 48 * scaleFactor,
               height: 48 * scaleFactor,

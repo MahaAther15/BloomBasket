@@ -6,6 +6,7 @@ class Product {
   final String imageUrl;
   final String category;
   final List<String> tags;
+  final int stock;
 
   Product({
     required this.id,
@@ -15,5 +16,6 @@ class Product {
     required this.imageUrl,
     required this.category,
     this.tags = const [],
+    this.stock = 0,
   });
 }

@@ -1,26 +1,51 @@
 {
   "project_info": {
-    "project_number": "40288658115",
-    "project_id": "semesterproject-99a2b",
-    "storage_bucket": "semesterproject-99a2b.firebasestorage.app"
+    "project_number": "712198995530",
+    "project_id": "bloombasket-efb4b",
+    "storage_bucket": "bloombasket-efb4b.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:40288658115:android:1aa20ee62464b0dcf43876",
+        "mobilesdk_app_id": "1:712198995530:android:2af54a8e3506f303ce30b3",
         "android_client_info": {
           "package_name": "com.example.yourapp"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "712198995530-ruj16u9h0kk54d6o6tlhavni9ra5gtne.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.yourapp",
+            "certificate_hash": "936f70f73cc810555c8757f7bffc42e1575c91d5"
+          }
+        },
+        {
+          "client_id": "712198995530-9dvnog7dj51m0vdk2olioaou6hu8kd4g.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyAIVvkH74dnt8pCGLeRy-vCUrHIHzp6GnE"
+          "current_key": "AIzaSyA__89WbPmzd6vbheYgU2cXj2ONdQvDAFk"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "712198995530-9dvnog7dj51m0vdk2olioaou6hu8kd4g.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "712198995530-l6arlv4akco4bh2crt3brhjihkfk9ge9.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.bloombasket"
+              }
+            }
+          ]
         }
       }
     }

@@ -99,6 +99,7 @@ class BBOrder {
   final OrderStatus status;
   final String deliveryAddress;
   final String? trackingNumber;
+  final String? customerName;
   final DateTime? estimatedDeliveryDate;
   final String? specialInstructions;
 
@@ -109,6 +110,7 @@ class BBOrder {
     required this.orderDate,
     required this.status,
     required this.deliveryAddress,
+    this.customerName,
     this.trackingNumber,
     this.estimatedDeliveryDate,
     this.specialInstructions,
@@ -164,6 +166,7 @@ class BBOrder {
       'trackingNumber': trackingNumber,
       'estimatedDeliveryDate': estimatedDeliveryDate?.toIso8601String(),
       'specialInstructions': specialInstructions,
+      'customerName': customerName,
     };
   }
 
@@ -176,6 +179,7 @@ class BBOrder {
       orderDate: DateTime.parse(json['orderDate']),
       status: _parseOrderStatus(json['status']),
       deliveryAddress: json['deliveryAddress'],
+      customerName: json['customerName'],
       trackingNumber: json['trackingNumber'],
       estimatedDeliveryDate: json['estimatedDeliveryDate'] != null
           ? DateTime.parse(json['estimatedDeliveryDate'])
@@ -214,6 +218,7 @@ class BBOrder {
     DateTime? orderDate,
     OrderStatus? status,
     String? deliveryAddress,
+    String? customerName,
     String? trackingNumber,
     DateTime? estimatedDeliveryDate,
     String? specialInstructions,
@@ -225,6 +230,7 @@ class BBOrder {
       orderDate: orderDate ?? this.orderDate,
       status: status ?? this.status,
       deliveryAddress: deliveryAddress ?? this.deliveryAddress,
+      customerName: customerName ?? this.customerName,
       trackingNumber: trackingNumber ?? this.trackingNumber,
       estimatedDeliveryDate:
           estimatedDeliveryDate ?? this.estimatedDeliveryDate,

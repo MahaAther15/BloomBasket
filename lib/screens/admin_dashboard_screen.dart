@@ -9,11 +9,10 @@ import '../models/product.dart';
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
 
-  // Botanical Palette
-  static const Color primaryPurple = Color(0xFF7457A2);
-  static const Color accentGold = Color(0xFFF7C948);
   static const Color darkBg = Color(0xFFF8F6FF);
   static const Color surfaceColor = Colors.white;
+  static const Color primaryPurple = Color(0xFF7457A2);
+  static const Color accentGold = Color(0xFFF7C948);
 
   @override
   State<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
@@ -36,25 +35,41 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Widget build(BuildContext context) {
     final appState = Provider.of<AppState>(context);
     final isMobile = MediaQuery.of(context).size.width < 900;
-    
+
+    if (!appState.isAdminAuthenticated) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          context.go('/admin-login');
+        }
+      });
+      return const SizedBox.shrink();
+    }
+
     return Scaffold(
       backgroundColor: AdminDashboardScreen.darkBg,
       drawer: isMobile ? _buildDrawer(context) : null,
-      appBar: isMobile ? AppBar(
-        backgroundColor: AdminDashboardScreen.surfaceColor,
-        title: Text('ADMIN DASHBOARD', style: GoogleFonts.orbitron(fontSize: 12, color: AdminDashboardScreen.primaryPurple)),
-        iconTheme: const IconThemeData(color: AdminDashboardScreen.primaryPurple),
-      ) : null,
-      floatingActionButton: _selectedIndex == 1 ? FloatingActionButton(
-        backgroundColor: AdminDashboardScreen.accentGold,
-        onPressed: () => _showAddProductDialog(context, appState),
-        child: const Icon(Icons.add, color: AdminDashboardScreen.darkBg),
-      ) : null,
+      appBar: isMobile
+          ? AppBar(
+              backgroundColor: AdminDashboardScreen.surfaceColor,
+              title: Text('ADMIN DASHBOARD',
+                  style: GoogleFonts.orbitron(
+                      fontSize: 12, color: AdminDashboardScreen.primaryPurple)),
+              iconTheme: const IconThemeData(
+                  color: AdminDashboardScreen.primaryPurple),
+            )
+          : null,
+      floatingActionButton: _selectedIndex == 1
+          ? FloatingActionButton(
+              backgroundColor: AdminDashboardScreen.accentGold,
+              onPressed: () => _showAddProductDialog(context, appState),
+              child: const Icon(Icons.add, color: AdminDashboardScreen.darkBg),
+            )
+          : null,
       body: Row(
         children: [
           // Sidebar (only on Desktop)
           if (!isMobile) _buildSidebar(context),
-          
+
           // Main Content
           Expanded(
             child: IndexedStack(
@@ -78,7 +93,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeader('SYSTEM OVERVIEW', 'REAL-TIME PERFORMANCE METRICS', isMobile),
+          _buildHeader(
+              'SYSTEM OVERVIEW', 'REAL-TIME PERFORMANCE METRICS', isMobile),
           const SizedBox(height: 32),
           _buildStatsGrid(appState, isMobile),
           const SizedBox(height: 32),
@@ -113,41 +129,43 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   ),
                   child: ListTile(
                     leading: Container(
-                      width: 48,
-                      height: 48,
+                      width: 56,
+                      height: 56,
                       decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
                         color: AdminDashboardScreen.darkBg,
-                        borderRadius: BorderRadius.circular(8),
-                        image: p.imageUrl.isNotEmpty
-                            ? DecorationImage(
-                                image: AssetImage(p.imageUrl),
-                                fit: BoxFit.cover,
-                              )
-                            : null,
                       ),
-                      child: p.imageUrl.isEmpty ? const Icon(Icons.local_florist, color: AdminDashboardScreen.accentGold) : null,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: p.imageUrl.isNotEmpty
+                            ? (p.imageUrl.startsWith('http')
+                                ? Image.network(p.imageUrl,
+                                    fit: BoxFit.cover,
+                                    width: 56,
+                                    height: 56,
+                                    errorBuilder: (_, __, ___) => const Icon(
+                                        Icons.local_florist,
+                                        color: AdminDashboardScreen.accentGold))
+                                : Image.asset(p.imageUrl,
+                                    fit: BoxFit.cover, width: 56, height: 56))
+                            : const Icon(Icons.local_florist,
+                                color: AdminDashboardScreen.accentGold),
+                      ),
                     ),
-                    title: Text(p.name, style: GoogleFonts.orbitron(color: Colors.black87, fontSize: 13, fontWeight: FontWeight.bold)),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(p.description, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.black54, fontSize: 11)),
-                        const SizedBox(height: 4),
-                        Wrap(
-                          spacing: 4,
-                          children: p.tags.map((tag) => Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: AdminDashboardScreen.primaryPurple.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(tag, style: TextStyle(color: AdminDashboardScreen.primaryPurple, fontSize: 9)),
-                          )).toList(),
-                        ),
-                      ],
-                    ),
-                    trailing: Text('\$${p.price.toInt()}', style: GoogleFonts.orbitron(color: AdminDashboardScreen.accentGold, fontWeight: FontWeight.bold)),
-                    isThreeLine: true,
+                    title: Text(p.name,
+                        style: GoogleFonts.orbitron(
+                            color: AdminDashboardScreen.primaryPurple,
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold)),
+                    subtitle: Text(p.category,
+                        style: TextStyle(
+                            color: AdminDashboardScreen.primaryPurple
+                                .withOpacity(0.7),
+                            fontSize: 11)),
+                    trailing: Text('\$${p.price.toInt()}',
+                        style: GoogleFonts.orbitron(
+                            color: AdminDashboardScreen.primaryPurple,
+                            fontWeight: FontWeight.bold)),
                   ),
                 );
               },
@@ -163,12 +181,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeader('ORDER MANAGEMENT', 'TRACK ALL CUSTOMER REQUESTS', isMobile),
+          _buildHeader(
+              'ORDER MANAGEMENT', 'TRACK ALL CUSTOMER REQUESTS', isMobile),
           const SizedBox(height: 32),
-          if (appState.orders.isEmpty)
+          if (appState.adminOrders.isEmpty)
             _buildEmptyState('NO ORDERS PENDING')
           else
-            ...appState.orders.map((o) => _OrderCard(order: o, isMobile: isMobile, onStatusChanged: (s) {})),
+            ...appState.adminOrders.map((o) => _OrderCard(
+                order: o,
+                isMobile: isMobile,
+                onStatusChanged: (s) => appState.updateOrderStatus(o.id, s))),
         ],
       ),
     );
@@ -179,9 +201,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.analytics, size: 64, color: AdminDashboardScreen.primaryPurple.withOpacity(0.5)),
+          Icon(Icons.analytics,
+              size: 64,
+              color: AdminDashboardScreen.primaryPurple.withOpacity(0.5)),
           const SizedBox(height: 16),
-          Text('ANALYTICS ENGINE LOADING...', style: GoogleFonts.orbitron(color: Colors.black38)),
+          Text('ANALYTICS ENGINE LOADING...',
+              style: GoogleFonts.orbitron(color: Colors.white24)),
         ],
       ),
     );
@@ -189,60 +214,100 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   void _showAddProductDialog(BuildContext context, AppState appState) {
     final nameController = TextEditingController();
+    final descriptionController = TextEditingController();
     final priceController = TextEditingController();
     final categoryController = TextEditingController();
+    final imageController = TextEditingController();
+    final stockController = TextEditingController();
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AdminDashboardScreen.surfaceColor,
-        title: Text('ADD NEW BLOOM', style: GoogleFonts.orbitron(color: AdminDashboardScreen.primaryPurple, fontSize: 14)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              style: const TextStyle(color: Colors.black87),
-              decoration: _inputDecoration('FLOWER NAME'),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: priceController,
-              style: const TextStyle(color: Colors.black87),
-              keyboardType: TextInputType.number,
-              decoration: _inputDecoration('PRICE (\$)'),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: categoryController,
-              style: const TextStyle(color: Colors.black87),
-              decoration: _inputDecoration('CATEGORY'),
-            ),
-          ],
+        title: Text('ADD NEW BLOOM',
+            style: GoogleFonts.orbitron(
+                color: AdminDashboardScreen.primaryPurple, fontSize: 14)),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                style: const TextStyle(color: Colors.white),
+                decoration: _inputDecoration('FLOWER NAME'),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: descriptionController,
+                style: const TextStyle(color: Colors.white),
+                decoration: _inputDecoration('DESCRIPTION'),
+                maxLines: 2,
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: priceController,
+                style: const TextStyle(color: Colors.white),
+                keyboardType: TextInputType.number,
+                decoration: _inputDecoration('PRICE (\$)'),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: categoryController,
+                style: const TextStyle(color: Colors.white),
+                decoration: _inputDecoration('SPECIALTY / CATEGORY'),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: imageController,
+                style: const TextStyle(color: Colors.white),
+                decoration: _inputDecoration('PICTURE URL OR ASSET PATH'),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: stockController,
+                style: const TextStyle(color: Colors.white),
+                keyboardType: TextInputType.number,
+                decoration: _inputDecoration('STOCK QUANTITY'),
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('CANCEL', style: TextStyle(color: Colors.black54)),
+            child: Text('CANCEL',
+                style: TextStyle(color: Colors.white.withOpacity(0.5))),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AdminDashboardScreen.primaryPurple),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: AdminDashboardScreen.primaryPurple),
             onPressed: () {
-              if (nameController.text.isNotEmpty && priceController.text.isNotEmpty) {
+              if (nameController.text.isNotEmpty &&
+                  priceController.text.isNotEmpty) {
                 final newProduct = Product(
                   id: DateTime.now().millisecondsSinceEpoch.toString(),
                   name: nameController.text,
-                  description: 'New artisanal flower arrangement.',
+                  description: descriptionController.text.isNotEmpty
+                      ? descriptionController.text
+                      : 'New artisanal flower arrangement.',
                   price: double.tryParse(priceController.text) ?? 0.0,
-                  imageUrl: 'assets/images/flower.png',
-                  category: categoryController.text,
-                  tags: ['Admin', 'New'],
+                  imageUrl: imageController.text.isNotEmpty
+                      ? imageController.text
+                      : 'assets/images/flower.png',
+                  category: categoryController.text.isNotEmpty
+                      ? categoryController.text
+                      : 'Artisan',
+                  tags: categoryController.text.isNotEmpty
+                      ? [categoryController.text]
+                      : ['Admin', 'New'],
+                  stock: int.tryParse(stockController.text) ?? 0,
                 );
                 appState.addProduct(newProduct);
                 Navigator.pop(context);
               }
             },
-            child: const Text('ADD TO SHOP', style: TextStyle(color: Colors.white)),
+            child: const Text('ADD TO SHOP',
+                style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -252,13 +317,19 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   InputDecoration _inputDecoration(String label) {
     return InputDecoration(
       labelText: label,
-      labelStyle: TextStyle(color: AdminDashboardScreen.primaryPurple.withOpacity(0.5), fontSize: 10),
-      enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AdminDashboardScreen.primaryPurple.withOpacity(0.2))),
-      focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AdminDashboardScreen.primaryPurple)),
+      labelStyle: TextStyle(
+          color: AdminDashboardScreen.primaryPurple.withOpacity(0.5),
+          fontSize: 10),
+      enabledBorder: UnderlineInputBorder(
+          borderSide: BorderSide(
+              color: AdminDashboardScreen.primaryPurple.withOpacity(0.2))),
+      focusedBorder: const UnderlineInputBorder(
+          borderSide: BorderSide(color: AdminDashboardScreen.primaryPurple)),
     );
   }
 
   Widget _buildSidebar(BuildContext context) {
+    final appState = Provider.of<AppState>(context, listen: false);
     return Container(
       width: 260,
       color: Colors.white,
@@ -268,12 +339,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           print("Admin Sidebar Clicked: $index");
           setState(() => _selectedIndex = index);
         },
-        onLogout: () => context.go('/'),
+        onLogout: () {
+          appState.setAdminAuthenticated(false);
+          context.go('/');
+        },
       ),
     );
   }
 
   Widget _buildDrawer(BuildContext context) {
+    final appState = Provider.of<AppState>(context, listen: false);
     return Drawer(
       backgroundColor: Colors.white,
       child: _SidebarContent(
@@ -283,7 +358,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           setState(() => _selectedIndex = index);
           Navigator.pop(context);
         },
-        onLogout: () => context.go('/'),
+        onLogout: () {
+          appState.setAdminAuthenticated(false);
+          context.go('/');
+        },
       ),
     );
   }
@@ -296,7 +374,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           title,
           style: GoogleFonts.orbitron(
             color: AdminDashboardScreen.primaryPurple,
-            fontSize: isMobile ? 18 : 24,
+            fontSize: isMobile ? 22 : 30,
             fontWeight: FontWeight.bold,
             letterSpacing: 2,
           ),
@@ -306,7 +384,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           sub,
           style: GoogleFonts.orbitron(
             color: AdminDashboardScreen.primaryPurple.withOpacity(0.5),
-            fontSize: isMobile ? 8 : 10,
+            fontSize: isMobile ? 10 : 12,
             letterSpacing: isMobile ? 2 : 4,
           ),
         ),
@@ -323,10 +401,20 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       mainAxisSpacing: 16,
       childAspectRatio: 1.5,
       children: [
-        _AdminStatCard(label: 'TOTAL REVENUE', value: '\$${appState.totalRevenue.toInt()}', color: AdminDashboardScreen.accentGold),
-        _AdminStatCard(label: 'ACTIVE ORDERS', value: '${appState.orders.length}', color: Colors.blue),
-        _AdminStatCard(label: 'PRODUCTS', value: '${appState.products.length}', color: Colors.green),
-        _AdminStatCard(label: 'LOGGED IN USERS', value: '${appState.usersCount}', color: Colors.purple),
+        _AdminStatCard(
+            label: 'TOTAL REVENUE',
+            value:
+                '\$${appState.adminOrders.fold(0.0, (sum, order) => sum + order.totalAmount).toInt()}',
+            color: AdminDashboardScreen.accentGold),
+        _AdminStatCard(
+            label: 'ACTIVE ORDERS',
+            value: '${appState.adminOrders.length}',
+            color: Colors.blue),
+        _AdminStatCard(
+            label: 'PRODUCTS',
+            value: '${appState.products.length}',
+            color: Colors.green),
+        _AdminStatCard(label: 'CUSTOMERS', value: '1.2K', color: Colors.purple),
       ],
     );
   }
@@ -340,18 +428,25 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           children: [
             Text(
               'RECENT LOGS',
-              style: GoogleFonts.orbitron(color: Colors.black87, fontSize: 14, fontWeight: FontWeight.bold, letterSpacing: 2),
+              style: GoogleFonts.orbitron(
+                  color: AdminDashboardScreen.primaryPurple,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 2),
             ),
             TextButton(
               onPressed: () => setState(() => _selectedIndex = 2),
-              child: Text('VIEW ALL', style: GoogleFonts.orbitron(color: AdminDashboardScreen.accentGold, fontSize: 10)),
+              child: Text('VIEW ALL',
+                  style: GoogleFonts.orbitron(
+                      color: AdminDashboardScreen.accentGold, fontSize: 10)),
             ),
           ],
         ),
         const SizedBox(height: 16),
-        if (appState.orders.isEmpty) _buildEmptyState('NO DATA STREAM DETECTED')
+        if (appState.adminOrders.isEmpty)
+          _buildEmptyState('NO DATA STREAM DETECTED')
         else
-          ...appState.orders.take(5).map((order) => _OrderCard(
+          ...appState.adminOrders.take(5).map((order) => _OrderCard(
                 order: order,
                 isMobile: isMobile,
                 onStatusChanged: (s) {},
@@ -372,11 +467,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.data_array, color: Colors.black26, size: 64),
+          Icon(Icons.data_array,
+              color: AdminDashboardScreen.primaryPurple.withOpacity(0.2),
+              size: 64),
           const SizedBox(height: 16),
           Text(
             message,
-            style: GoogleFonts.orbitron(color: Colors.black38, fontSize: 12),
+            style: GoogleFonts.orbitron(
+                color: AdminDashboardScreen.primaryPurple.withOpacity(0.5),
+                fontSize: 12),
           ),
         ],
       ),
@@ -388,7 +487,7 @@ class _SidebarContent extends StatelessWidget {
   final int selectedIndex;
   final Function(int) onTap;
   final VoidCallback onLogout;
-  
+
   const _SidebarContent({
     required this.selectedIndex,
     required this.onTap,
@@ -400,15 +499,31 @@ class _SidebarContent extends StatelessWidget {
     return Column(
       children: [
         const SizedBox(height: 40),
-        _SidebarItem(icon: Icons.dashboard, label: 'DASHBOARD', isActive: selectedIndex == 0, onTap: () => onTap(0)),
-        _SidebarItem(icon: Icons.inventory_2, label: 'PRODUCTS', isActive: selectedIndex == 1, onTap: () => onTap(1)),
-        _SidebarItem(icon: Icons.shopping_basket, label: 'ORDERS', isActive: selectedIndex == 2, onTap: () => onTap(2)),
-        _SidebarItem(icon: Icons.analytics, label: 'ANALYTICS', isActive: selectedIndex == 3, onTap: () => onTap(3)),
+        _SidebarItem(
+            icon: Icons.dashboard,
+            label: 'DASHBOARD',
+            isActive: selectedIndex == 0,
+            onTap: () => onTap(0)),
+        _SidebarItem(
+            icon: Icons.inventory_2,
+            label: 'PRODUCTS',
+            isActive: selectedIndex == 1,
+            onTap: () => onTap(1)),
+        _SidebarItem(
+            icon: Icons.shopping_basket,
+            label: 'ORDERS',
+            isActive: selectedIndex == 2,
+            onTap: () => onTap(2)),
+        _SidebarItem(
+            icon: Icons.analytics,
+            label: 'ANALYTICS',
+            isActive: selectedIndex == 3,
+            onTap: () => onTap(3)),
         const Spacer(),
         _SidebarItem(
-          icon: Icons.logout, 
-          label: 'LOGOUT', 
-          isActive: false, 
+          icon: Icons.logout,
+          label: 'LOGOUT',
+          isActive: false,
           onTap: onLogout,
         ),
         const SizedBox(height: 40),
@@ -422,7 +537,8 @@ class _AdminStatCard extends StatelessWidget {
   final String value;
   final Color color;
 
-  const _AdminStatCard({required this.label, required this.value, required this.color});
+  const _AdminStatCard(
+      {required this.label, required this.value, required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -440,14 +556,20 @@ class _AdminStatCard extends StatelessWidget {
           FittedBox(
             child: Text(
               label,
-              style: GoogleFonts.orbitron(color: color.withOpacity(0.7), fontSize: 8, fontWeight: FontWeight.bold),
+              style: GoogleFonts.orbitron(
+                  color: color.withOpacity(0.7),
+                  fontSize: 8,
+                  fontWeight: FontWeight.bold),
             ),
           ),
           const SizedBox(height: 8),
           FittedBox(
             child: Text(
               value,
-              style: GoogleFonts.orbitron(color: Colors.black87, fontSize: 20, fontWeight: FontWeight.bold),
+              style: GoogleFonts.orbitron(
+                  color: Colors.white,
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -485,7 +607,8 @@ class _OrderCard extends StatelessWidget {
               color: AdminDashboardScreen.primaryPurple.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(Icons.receipt_long, color: AdminDashboardScreen.primaryPurple, size: 20),
+            child: const Icon(Icons.receipt_long,
+                color: AdminDashboardScreen.primaryPurple, size: 20),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -494,18 +617,54 @@ class _OrderCard extends StatelessWidget {
               children: [
                 Text(
                   'ORDER #${order.id.substring(0, 8).toUpperCase()}',
-                  style: GoogleFonts.orbitron(color: AdminDashboardScreen.primaryPurple, fontSize: 10, fontWeight: FontWeight.bold),
+                  style: GoogleFonts.orbitron(
+                      color: AdminDashboardScreen.primaryPurple,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold),
                 ),
+                if (order.customerName != null)
+                  Text(
+                    'Customer: ${order.customerName}',
+                    style: TextStyle(
+                        color:
+                            AdminDashboardScreen.primaryPurple.withOpacity(0.5),
+                        fontSize: 12),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 Text(
-                  'User at ${order.deliveryAddress} placed an order',
-                  style: TextStyle(color: Colors.black54, fontSize: 12),
+                  'Delivery: ${order.deliveryAddress}',
+                  style: TextStyle(
+                      color:
+                          AdminDashboardScreen.primaryPurple.withOpacity(0.5),
+                      fontSize: 13),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                if (order.items.any((item) => item.product.description.contains('Message:')))
+                const SizedBox(height: 8),
+                Text(
+                  order.items
+                      .map((item) => '${item.quantity}x ${item.product.name}')
+                      .join(', '),
+                  style: TextStyle(
+                      color:
+                          AdminDashboardScreen.primaryPurple.withOpacity(0.4),
+                      fontSize: 12),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (order.specialInstructions != null &&
+                    order.specialInstructions!.isNotEmpty)
                   Padding(
-                    padding: const EdgeInsets.only(top: 4.0),
+                    padding: const EdgeInsets.only(top: 8.0),
                     child: Text(
-                      'Message: ${order.items.firstWhere((item) => item.product.description.contains('Message:')).product.description.split('Message:').last.trim()}',
-                      style: TextStyle(color: AdminDashboardScreen.primaryPurple, fontSize: 11, fontStyle: FontStyle.italic, fontWeight: FontWeight.bold),
+                      'Note: ${order.specialInstructions}',
+                      style: TextStyle(
+                          color: AdminDashboardScreen.primaryPurple
+                              .withOpacity(0.35),
+                          fontSize: 10),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
               ],
@@ -517,13 +676,27 @@ class _OrderCard extends StatelessWidget {
               Text(
                 '\$${order.totalAmount.toInt()}',
                 style: GoogleFonts.orbitron(
-                  color: AdminDashboardScreen.accentGold, 
-                  fontSize: 14, 
-                  fontWeight: FontWeight.bold
-                ),
+                    color: AdminDashboardScreen.accentGold,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 4),
               _StatusChip(status: order.status),
+              PopupMenuButton<OrderStatus>(
+                icon: const Icon(Icons.edit,
+                    color: AdminDashboardScreen.primaryPurple, size: 18),
+                color: AdminDashboardScreen.surfaceColor,
+                onSelected: onStatusChanged,
+                itemBuilder: (context) {
+                  return OrderStatus.values.map((status) {
+                    return PopupMenuItem<OrderStatus>(
+                      value: status,
+                      child: Text(status.displayText,
+                          style: const TextStyle(fontSize: 12)),
+                    );
+                  }).toList();
+                },
+              ),
             ],
           ),
         ],
@@ -539,7 +712,9 @@ class _StatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Color color = AdminDashboardScreen.primaryPurple;
-    if (status == OrderStatus.confirmed) color = AdminDashboardScreen.accentGold;
+    if (status == OrderStatus.confirmed) {
+      color = AdminDashboardScreen.accentGold;
+    }
     if (status == OrderStatus.delivered) color = Colors.green;
     if (status == OrderStatus.cancelled) color = Colors.red;
 
@@ -552,7 +727,8 @@ class _StatusChip extends StatelessWidget {
       ),
       child: Text(
         status.toString().split('.').last.toUpperCase(),
-        style: GoogleFonts.orbitron(color: color, fontSize: 7, fontWeight: FontWeight.bold),
+        style: GoogleFonts.orbitron(
+            color: color, fontSize: 7, fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -575,11 +751,16 @@ class _SidebarItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       onTap: onTap,
-      leading: Icon(icon, color: isActive ? AdminDashboardScreen.accentGold : AdminDashboardScreen.primaryPurple.withOpacity(0.3)),
+      leading: Icon(icon,
+          color: isActive
+              ? AdminDashboardScreen.accentGold
+              : AdminDashboardScreen.primaryPurple.withOpacity(0.3)),
       title: Text(
         label,
         style: GoogleFonts.orbitron(
-          color: isActive ? AdminDashboardScreen.primaryPurple : AdminDashboardScreen.primaryPurple.withOpacity(0.3),
+          color: isActive
+              ? AdminDashboardScreen.primaryPurple
+              : AdminDashboardScreen.primaryPurple.withOpacity(0.3),
           fontSize: 12,
           fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
           letterSpacing: 2,

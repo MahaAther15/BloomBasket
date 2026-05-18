@@ -320,7 +320,7 @@ class _TrackOrderScreenState extends State<TrackOrderScreen>
               child: const Text(
                 'IN PROGRESS',
                 style: TextStyle(
-                  color: _kWhite,
+                  color: _kText,
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 0.5,

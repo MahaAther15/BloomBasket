@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../providers/app_state.dart';
 
 import 'package:provider/provider.dart';
 import '../providers/app_state.dart';
@@ -30,10 +32,8 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
     await Future.delayed(const Duration(seconds: 1));
     
     if (_idController.text == 'admin' && _passwordController.text == 'admin123') {
-      if (mounted) {
-        context.read<AppState>().setAdmin(true);
-        context.go('/admin');
-      }
+      Provider.of<AppState>(context, listen: false).setAdminAuthenticated(true);
+      if (mounted) context.go('/admin');
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

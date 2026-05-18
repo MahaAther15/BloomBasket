@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_state.dart';
-import 'home_screen.dart';
 import '../widgets/primary_button.dart';
-import '../widgets/ghost_button.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 // ─── Shared Palette (Matching Your App) ──────────────────────────────────────
@@ -235,11 +233,7 @@ class _SignInScreenState extends State<SignInScreen>
               // Google Sign In Button
               FadeTransition(
                 opacity: _fadeAnimation,
-                child: GhostButton(
-                  label: 'Continue with Google',
-                  onPressed: () => _handleGoogleSignIn(),
-                  icon: Icons.g_mobiledata,
-                ),
+                child: _buildGoogleButton(),
               ),
 
               const SizedBox(height: 32),
@@ -391,7 +385,8 @@ class _SignInScreenState extends State<SignInScreen>
           contentPadding: const EdgeInsets.symmetric(vertical: 16),
         ),
         keyboardType: TextInputType.emailAddress,
-        style: TextStyle(fontSize: isSmallScreen ? 14 : 15),
+        cursorColor: _kPurple,
+        style: TextStyle(color: _kText, fontSize: isSmallScreen ? 14 : 15),
       ),
     );
   }
@@ -445,7 +440,8 @@ class _SignInScreenState extends State<SignInScreen>
           fillColor: _kWhite,
           contentPadding: const EdgeInsets.symmetric(vertical: 16),
         ),
-        style: TextStyle(fontSize: isSmallScreen ? 14 : 15),
+        cursorColor: _kPurple,
+        style: TextStyle(color: _kText, fontSize: isSmallScreen ? 14 : 15),
       ),
     );
   }
@@ -502,6 +498,49 @@ class _SignInScreenState extends State<SignInScreen>
     );
   }
 
+  Widget _buildGoogleButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 56,
+      child: OutlinedButton(
+        onPressed: _isLoading ? null : _handleGoogleSignIn,
+        style: OutlinedButton.styleFrom(
+          backgroundColor: _kWhite,
+          side: BorderSide(color: _kPurple.withOpacity(0.25), width: 1.5),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 0,
+          shadowColor: Colors.transparent,
+          padding: EdgeInsets.zero,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Colored Google G logo
+            SizedBox(
+              width: 24,
+              height: 24,
+              child: CustomPaint(
+                painter: _GoogleLogoPainter(),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              'Continue with Google',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: _kText,
+                letterSpacing: 0.2,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _handleSignIn() async {
     if (_emailController.text.trim().isEmpty) {
       _showErrorSnackBar('Please enter your email');
@@ -519,7 +558,7 @@ class _SignInScreenState extends State<SignInScreen>
       final appState = Provider.of<AppState>(context, listen: false);
       await appState.signIn(
           _emailController.text.trim(), _passwordController.text);
-      if (mounted) context.go('/profile');
+      if (mounted) context.go('/');
     } catch (e) {
       if (mounted)
         _showErrorSnackBar(e.toString().replaceAll('Exception:', ''));
@@ -534,7 +573,7 @@ class _SignInScreenState extends State<SignInScreen>
     try {
       final appState = Provider.of<AppState>(context, listen: false);
       await appState.signInWithGoogle();
-      if (mounted) context.go('/profile');
+      if (mounted) context.go('/');
     } catch (e) {
       if (mounted)
         _showErrorSnackBar(e.toString().replaceAll('Exception:', ''));
@@ -921,6 +960,23 @@ class _SignUpScreenState extends State<SignUpScreen>
                       ),
                     ),
                     const SizedBox(height: 20),
+
+                    // OR divider
+                    Row(
+                      children: [
+                        Expanded(child: Divider(color: _kPurple.withOpacity(0.2), thickness: 1)),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Text('OR', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _kTextSub, letterSpacing: 0.5)),
+                        ),
+                        Expanded(child: Divider(color: _kPurple.withOpacity(0.2), thickness: 1)),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Google Sign In Button
+                    _buildGoogleButton(),
+                    const SizedBox(height: 20),
                   ],
                 ),
               ),
@@ -929,6 +985,52 @@ class _SignUpScreenState extends State<SignUpScreen>
         ),
       ),
     );
+  }
+
+  Widget _buildGoogleButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 56,
+      child: OutlinedButton(
+        onPressed: _isLoading ? null : _handleGoogleSignIn,
+        style: OutlinedButton.styleFrom(
+          backgroundColor: _kWhite,
+          side: BorderSide(color: _kPurple.withOpacity(0.25), width: 1.5),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          elevation: 0,
+          shadowColor: Colors.transparent,
+          padding: EdgeInsets.zero,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 24,
+              height: 24,
+              child: CustomPaint(painter: _GoogleLogoPainter()),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              'Continue with Google',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _kText, letterSpacing: 0.2),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    setState(() => _isLoading = true);
+    try {
+      final appState = Provider.of<AppState>(context, listen: false);
+      await appState.signInWithGoogle();
+      if (mounted) context.go('/');
+    } catch (e) {
+      if (mounted) _showError(e.toString().replaceAll('Exception:', ''));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   Widget _buildTextField({
@@ -973,7 +1075,8 @@ class _SignUpScreenState extends State<SignUpScreen>
           contentPadding: const EdgeInsets.symmetric(vertical: 16),
         ),
         keyboardType: keyboardType,
-        style: TextStyle(fontSize: isSmallScreen ? 14 : 15),
+        cursorColor: _kPurple,
+        style: TextStyle(color: _kText, fontSize: isSmallScreen ? 14 : 15),
       ),
     );
   }
@@ -1032,7 +1135,8 @@ class _SignUpScreenState extends State<SignUpScreen>
           fillColor: _kWhite,
           contentPadding: const EdgeInsets.symmetric(vertical: 16),
         ),
-        style: TextStyle(fontSize: isSmallScreen ? 14 : 15),
+        cursorColor: _kPurple,
+        style: TextStyle(color: _kText, fontSize: isSmallScreen ? 14 : 15),
       ),
     );
   }
@@ -1068,7 +1172,7 @@ class _SignUpScreenState extends State<SignUpScreen>
         _passwordController.text,
         _usernameController.text.trim(),
       );
-      if (mounted) context.go('/profile');
+      if (mounted) context.go('/');
     } catch (e) {
       if (mounted) _showError(e.toString().replaceAll('Exception:', ''));
     } finally {
@@ -1093,4 +1197,68 @@ class _SignUpScreenState extends State<SignUpScreen>
       ),
     );
   }
+}
+
+// ─── Google Logo Painter ─────────────────────────────────────────────────────
+class _GoogleLogoPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final double cx = size.width / 2;
+    final double cy = size.height / 2;
+    final double r = size.width / 2;
+
+    // Clip to circle
+    canvas.clipPath(Path()..addOval(Rect.fromCircle(center: Offset(cx, cy), radius: r)));
+
+    // White background
+    canvas.drawCircle(Offset(cx, cy), r, Paint()..color = Colors.white);
+
+    // Draw the Google "G" using arcs and rects
+    final strokeW = size.width * 0.12;
+
+    // Blue arc (right)
+    _drawArc(canvas, cx, cy, r * 0.7, -10, 100, const Color(0xFF4285F4), strokeW);
+    // Green arc (bottom)
+    _drawArc(canvas, cx, cy, r * 0.7, 90, 100, const Color(0xFF34A853), strokeW);
+    // Yellow arc (bottom-left)
+    _drawArc(canvas, cx, cy, r * 0.7, 190, 80, const Color(0xFFFBBC05), strokeW);
+    // Red arc (top-left)
+    _drawArc(canvas, cx, cy, r * 0.7, 270, 80, const Color(0xFFEA4335), strokeW);
+
+    // White center hole
+    canvas.drawCircle(Offset(cx, cy), r * 0.45, Paint()..color = Colors.white);
+
+    // Blue horizontal bar (the cross of the G)
+    final barPaint = Paint()
+      ..color = const Color(0xFF4285F4)
+      ..style = PaintingStyle.fill;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(cx, cy - strokeW * 0.45, r * 0.72, strokeW * 0.9),
+        const Radius.circular(4),
+      ),
+      barPaint,
+    );
+  }
+
+  void _drawArc(Canvas canvas, double cx, double cy, double radius,
+      double startDeg, double sweepDeg, Color color, double strokeWidth) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.butt;
+    final startRad = startDeg * 3.14159265 / 180;
+    final sweepRad = sweepDeg * 3.14159265 / 180;
+    canvas.drawArc(
+      Rect.fromCircle(center: Offset(cx, cy), radius: radius),
+      startRad,
+      sweepRad,
+      false,
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_GoogleLogoPainter oldDelegate) => false;
 }
