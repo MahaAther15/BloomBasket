@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:provider/provider.dart';
+import '../providers/app_state.dart';
+
 class AdminLoginScreen extends StatefulWidget {
   const AdminLoginScreen({super.key});
 
@@ -27,7 +30,10 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
     await Future.delayed(const Duration(seconds: 1));
     
     if (_idController.text == 'admin' && _passwordController.text == 'admin123') {
-      if (mounted) context.go('/admin');
+      if (mounted) {
+        context.read<AppState>().setAdmin(true);
+        context.go('/admin');
+      }
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -39,7 +45,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
       }
     }
     
-    setState(() => _isLoading = false);
+    if (mounted) setState(() => _isLoading = false);
   }
 
   @override

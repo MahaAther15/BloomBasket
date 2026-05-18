@@ -23,6 +23,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   int _selectedIndex = 0;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!context.read<AppState>().isAdmin) {
+        context.go('/admin-login');
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final appState = Provider.of<AppState>(context);
     final isMobile = MediaQuery.of(context).size.width < 900;
@@ -108,12 +118,36 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       decoration: BoxDecoration(
                         color: AdminDashboardScreen.darkBg,
                         borderRadius: BorderRadius.circular(8),
+                        image: p.imageUrl.isNotEmpty
+                            ? DecorationImage(
+                                image: AssetImage(p.imageUrl),
+                                fit: BoxFit.cover,
+                              )
+                            : null,
                       ),
-                      child: const Icon(Icons.local_florist, color: AdminDashboardScreen.accentGold),
+                      child: p.imageUrl.isEmpty ? const Icon(Icons.local_florist, color: AdminDashboardScreen.accentGold) : null,
                     ),
-                    title: Text(p.name, style: GoogleFonts.orbitron(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
-                    subtitle: Text(p.category, style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 11)),
+                    title: Text(p.name, style: GoogleFonts.orbitron(color: Colors.black87, fontSize: 13, fontWeight: FontWeight.bold)),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(p.description, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.black54, fontSize: 11)),
+                        const SizedBox(height: 4),
+                        Wrap(
+                          spacing: 4,
+                          children: p.tags.map((tag) => Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AdminDashboardScreen.primaryPurple.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(tag, style: TextStyle(color: AdminDashboardScreen.primaryPurple, fontSize: 9)),
+                          )).toList(),
+                        ),
+                      ],
+                    ),
                     trailing: Text('\$${p.price.toInt()}', style: GoogleFonts.orbitron(color: AdminDashboardScreen.accentGold, fontWeight: FontWeight.bold)),
+                    isThreeLine: true,
                   ),
                 );
               },
@@ -147,7 +181,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         children: [
           Icon(Icons.analytics, size: 64, color: AdminDashboardScreen.primaryPurple.withOpacity(0.5)),
           const SizedBox(height: 16),
-          Text('ANALYTICS ENGINE LOADING...', style: GoogleFonts.orbitron(color: Colors.white24)),
+          Text('ANALYTICS ENGINE LOADING...', style: GoogleFonts.orbitron(color: Colors.black38)),
         ],
       ),
     );
@@ -168,20 +202,20 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           children: [
             TextField(
               controller: nameController,
-              style: const TextStyle(color: Colors.white),
+              style: const TextStyle(color: Colors.black87),
               decoration: _inputDecoration('FLOWER NAME'),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: priceController,
-              style: const TextStyle(color: Colors.white),
+              style: const TextStyle(color: Colors.black87),
               keyboardType: TextInputType.number,
               decoration: _inputDecoration('PRICE (\$)'),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: categoryController,
-              style: const TextStyle(color: Colors.white),
+              style: const TextStyle(color: Colors.black87),
               decoration: _inputDecoration('CATEGORY'),
             ),
           ],
@@ -189,7 +223,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('CANCEL', style: TextStyle(color: Colors.white.withOpacity(0.5))),
+            child: Text('CANCEL', style: TextStyle(color: Colors.black54)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AdminDashboardScreen.primaryPurple),
@@ -292,7 +326,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         _AdminStatCard(label: 'TOTAL REVENUE', value: '\$${appState.totalRevenue.toInt()}', color: AdminDashboardScreen.accentGold),
         _AdminStatCard(label: 'ACTIVE ORDERS', value: '${appState.orders.length}', color: Colors.blue),
         _AdminStatCard(label: 'PRODUCTS', value: '${appState.products.length}', color: Colors.green),
-        _AdminStatCard(label: 'CUSTOMERS', value: '1.2K', color: Colors.purple),
+        _AdminStatCard(label: 'LOGGED IN USERS', value: '${appState.usersCount}', color: Colors.purple),
       ],
     );
   }
@@ -306,7 +340,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           children: [
             Text(
               'RECENT LOGS',
-              style: GoogleFonts.orbitron(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold, letterSpacing: 2),
+              style: GoogleFonts.orbitron(color: Colors.black87, fontSize: 14, fontWeight: FontWeight.bold, letterSpacing: 2),
             ),
             TextButton(
               onPressed: () => setState(() => _selectedIndex = 2),
@@ -338,11 +372,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.data_array, color: Colors.white.withOpacity(0.2), size: 64),
+          Icon(Icons.data_array, color: Colors.black26, size: 64),
           const SizedBox(height: 16),
           Text(
             message,
-            style: GoogleFonts.orbitron(color: Colors.white24, fontSize: 12),
+            style: GoogleFonts.orbitron(color: Colors.black38, fontSize: 12),
           ),
         ],
       ),
@@ -413,7 +447,7 @@ class _AdminStatCard extends StatelessWidget {
           FittedBox(
             child: Text(
               value,
-              style: GoogleFonts.orbitron(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+              style: GoogleFonts.orbitron(color: Colors.black87, fontSize: 20, fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -463,9 +497,17 @@ class _OrderCard extends StatelessWidget {
                   style: GoogleFonts.orbitron(color: AdminDashboardScreen.primaryPurple, fontSize: 10, fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  order.deliveryAddress,
-                  style: TextStyle(color: AdminDashboardScreen.primaryPurple.withOpacity(0.5), fontSize: 12),
+                  'User at ${order.deliveryAddress} placed an order',
+                  style: TextStyle(color: Colors.black54, fontSize: 12),
                 ),
+                if (order.items.any((item) => item.product.description.contains('Message:')))
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4.0),
+                    child: Text(
+                      'Message: ${order.items.firstWhere((item) => item.product.description.contains('Message:')).product.description.split('Message:').last.trim()}',
+                      style: TextStyle(color: AdminDashboardScreen.primaryPurple, fontSize: 11, fontStyle: FontStyle.italic, fontWeight: FontWeight.bold),
+                    ),
+                  ),
               ],
             ),
           ),

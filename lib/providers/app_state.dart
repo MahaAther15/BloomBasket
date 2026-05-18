@@ -34,6 +34,17 @@ class AppState extends ChangeNotifier {
   List<Product> get favorites => _favorites;
   List<BBOrder> get orders => _orders;
 
+  int _totalUsers = 0;
+  int get usersCount => _totalUsers;
+
+  bool _isAdmin = false;
+  bool get isAdmin => _isAdmin;
+
+  void setAdmin(bool value) {
+    _isAdmin = value;
+    notifyListeners();
+  }
+
   double get cartTotal => _cart.fold(0.0, (sum, item) => sum + item.totalPrice);
   int get cartItemCount => _cart.fold(0, (sum, item) => sum + item.quantity);
   bool get isSignedIn => _user != null;
@@ -90,7 +101,13 @@ class AppState extends ChangeNotifier {
           'lastUpdated': DateTime.now().toIso8601String()
         };
         await file.writeAsString(jsonEncode(initialData));
+        _totalUsers = 0;
+      } else {
+        final contents = await file.readAsString();
+        Map<String, dynamic> data = jsonDecode(contents);
+        _totalUsers = (data['users'] as List?)?.length ?? 0;
       }
+      notifyListeners();
 
       print("✅ Local storage initialized at: $_localUsersFilePath");
     } catch (e) {
@@ -148,6 +165,8 @@ class AppState extends ChangeNotifier {
         // Add new user
         users.add(userData);
       }
+      _totalUsers = users.length;
+      notifyListeners();
 
       data['users'] = users;
       data['lastUpdated'] = DateTime.now().toIso8601String();
