@@ -360,6 +360,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               fillColor: _kWhite,
               contentPadding: const EdgeInsets.symmetric(vertical: 16),
             ),
+            cursorColor: _kPurple,
+            style: const TextStyle(color: _kText),
           ),
         ),
         const SizedBox(height: 20),
@@ -542,13 +544,22 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               ),
             ],
           ),
-          child: CalendarDatePicker(
-            initialDate: DateTime.now().add(const Duration(days: 1)),
-            firstDate: DateTime.now(),
-            lastDate: DateTime.now().add(const Duration(days: 30)),
-            onDateChanged: (date) {
-              setState(() => _selectedDate = date);
-            },
+          child: Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: const ColorScheme.light(
+                primary: _kPurple,
+                onPrimary: _kWhite,
+                onSurface: _kText,
+              ),
+            ),
+            child: CalendarDatePicker(
+              initialDate: DateTime.now().add(const Duration(days: 1)),
+              firstDate: DateTime.now(),
+              lastDate: DateTime.now().add(const Duration(days: 30)),
+              onDateChanged: (date) {
+                setState(() => _selectedDate = date);
+              },
+            ),
           ),
         ),
       ],
