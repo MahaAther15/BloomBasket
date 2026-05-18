@@ -49,7 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
     await Future.delayed(const Duration(seconds: 2));
     if (mounted) {
       setState(() {
-        _currentLocation = 'Islamabad, Pakistan';
+        _currentLocation = 'Faisalabad, Pakistan';
       });
     }
   }
@@ -91,15 +91,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                      _buildHeader(appState, scaleFactor),
-                      _buildSearchBar(scaleFactor),
-                      _buildOfferBanner(scaleFactor),
-                      _buildCategoriesSection(scaleFactor),
-                      _buildTrendingSection(filteredProducts, scaleFactor),
-                      _buildBespokeSection(scaleFactor),
-                      _buildOccasionSection(appState.products, scaleFactor),
-                      const SizedBox(height: 24),
-                    ],
+                    _buildHeader(appState, scaleFactor),
+                    _buildSearchBar(scaleFactor),
+                    _buildOfferBanner(scaleFactor),
+                    _buildCategoriesSection(scaleFactor),
+                    _buildTrendingSection(filteredProducts, scaleFactor),
+                    _buildBespokeSection(scaleFactor),
+                    _buildOccasionSection(appState.products, scaleFactor),
+                    const SizedBox(height: 24),
+                  ],
                 ),
               ),
             );

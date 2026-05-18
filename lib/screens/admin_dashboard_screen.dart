@@ -25,7 +25,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!context.read<AppState>().isAdmin) {
+      if (!context.read<AppState>().isAdminAuthenticated) {
         context.go('/admin-login');
       }
     });
@@ -206,7 +206,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               color: AdminDashboardScreen.primaryPurple.withOpacity(0.5)),
           const SizedBox(height: 16),
           Text('ANALYTICS ENGINE LOADING...',
-              style: GoogleFonts.orbitron(color: Colors.white24)),
+              style: GoogleFonts.orbitron(color: Colors.black38)),
         ],
       ),
     );
@@ -233,39 +233,39 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             children: [
               TextField(
                 controller: nameController,
-                style: const TextStyle(color: Colors.white),
+                style: const TextStyle(color: Colors.black87),
                 decoration: _inputDecoration('FLOWER NAME'),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: descriptionController,
-                style: const TextStyle(color: Colors.white),
+                style: const TextStyle(color: Colors.black87),
                 decoration: _inputDecoration('DESCRIPTION'),
                 maxLines: 2,
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: priceController,
-                style: const TextStyle(color: Colors.white),
+                style: const TextStyle(color: Colors.black87),
                 keyboardType: TextInputType.number,
                 decoration: _inputDecoration('PRICE (\$)'),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: categoryController,
-                style: const TextStyle(color: Colors.white),
+                style: const TextStyle(color: Colors.black87),
                 decoration: _inputDecoration('SPECIALTY / CATEGORY'),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: imageController,
-                style: const TextStyle(color: Colors.white),
+                style: const TextStyle(color: Colors.black87),
                 decoration: _inputDecoration('PICTURE URL OR ASSET PATH'),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: stockController,
-                style: const TextStyle(color: Colors.white),
+                style: const TextStyle(color: Colors.black87),
                 keyboardType: TextInputType.number,
                 decoration: _inputDecoration('STOCK QUANTITY'),
               ),
@@ -276,7 +276,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text('CANCEL',
-                style: TextStyle(color: Colors.white.withOpacity(0.5))),
+                style: TextStyle(color: Colors.black54)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -462,7 +462,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       decoration: BoxDecoration(
         color: AdminDashboardScreen.surfaceColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: Colors.black.withOpacity(0.05)),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -553,24 +553,20 @@ class _AdminStatCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          FittedBox(
-            child: Text(
-              label,
-              style: GoogleFonts.orbitron(
-                  color: color.withOpacity(0.7),
-                  fontSize: 8,
-                  fontWeight: FontWeight.bold),
-            ),
+          Text(
+            label,
+            style: GoogleFonts.orbitron(
+                color: color.withOpacity(0.7),
+                fontSize: 8,
+                fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          FittedBox(
-            child: Text(
-              value,
-              style: GoogleFonts.orbitron(
-                  color: Colors.white,
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold),
-            ),
+          Text(
+            value,
+            style: GoogleFonts.orbitron(
+                color: Colors.black87,
+                fontSize: 26,
+                fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -597,7 +593,7 @@ class _OrderCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AdminDashboardScreen.surfaceColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: Colors.black.withOpacity(0.05)),
       ),
       child: Row(
         children: [

@@ -94,7 +94,6 @@ class AppState extends ChangeNotifier {
         _orders.clear();
         _userOrdersSubscription?.cancel();
         _userOrdersSubscription = null;
-        _isAdminAuthenticated = false;
       }
 
       notifyListeners();
@@ -274,7 +273,7 @@ class AppState extends ChangeNotifier {
         .snapshots()
         .listen((snapshot) {
       if (snapshot.docs.isNotEmpty) {
-        _products = snapshot.docs.map((doc) {
+        final firestoreProducts = snapshot.docs.map((doc) {
           final data = doc.data() as Map<String, dynamic>;
           return Product(
             id: data['id'] ?? doc.id,
@@ -287,6 +286,11 @@ class AppState extends ChangeNotifier {
             stock: (data['stock'] as num?)?.toInt() ?? 0,
           );
         }).toList();
+        
+        // Keep sample products and add Firestore ones to the top
+        _loadSampleProducts();
+        _products.insertAll(0, firestoreProducts);
+        
         notifyListeners();
       }
     }, onError: (e) {
