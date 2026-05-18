@@ -109,7 +109,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         color: AdminDashboardScreen.darkBg,
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(Icons.flower, color: AdminDashboardScreen.accentGold),
+                      child: const Icon(Icons.local_florist, color: AdminDashboardScreen.accentGold),
                     ),
                     title: Text(p.name, style: GoogleFonts.orbitron(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
                     subtitle: Text(p.category, style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 11)),
@@ -463,7 +463,7 @@ class _OrderCard extends StatelessWidget {
                   style: GoogleFonts.orbitron(color: AdminDashboardScreen.primaryPurple, fontSize: 10, fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  order.customerName,
+                  order.deliveryAddress,
                   style: TextStyle(color: AdminDashboardScreen.primaryPurple.withOpacity(0.5), fontSize: 12),
                 ),
               ],

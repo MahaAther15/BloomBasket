@@ -544,11 +544,6 @@ class AppState extends ChangeNotifier {
     return _currentUserData;
   }
 
-  void addProduct(Product product) {
-    _products.insert(0, product);
-    notifyListeners();
-  }
-
   void _loadSampleProducts() {
     _products = [
       Product(
@@ -854,6 +849,10 @@ class AppState extends ChangeNotifier {
   }
 
   // ==================== ADMIN METHODS ====================
+  double get totalRevenue {
+    return _orders.fold(0.0, (sum, order) => sum + order.totalAmount);
+  }
+
   void addProduct(Product product) {
     _products.insert(0, product);
 
