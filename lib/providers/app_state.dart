@@ -335,10 +335,13 @@ class AppState extends ChangeNotifier {
         .orderBy('orderDate', descending: true)
         .snapshots()
         .listen((snapshot) {
-      _adminOrders = snapshot.docs
+      final remote = snapshot.docs
           .map((doc) => _buildOrderFromData(doc.data() as Map<String, dynamic>))
           .toList();
-      notifyListeners();
+      if (remote.isNotEmpty) {
+        _adminOrders = remote;
+        notifyListeners();
+      }
     }, onError: (e) {
       print("❌ Global order listener error: $e");
     });
@@ -352,10 +355,13 @@ class AppState extends ChangeNotifier {
         .orderBy('orderDate', descending: true)
         .snapshots()
         .listen((snapshot) {
-      _orders = snapshot.docs
+      final remote = snapshot.docs
           .map((doc) => _buildOrderFromData(doc.data() as Map<String, dynamic>))
           .toList();
-      notifyListeners();
+      if (remote.isNotEmpty) {
+        _orders = remote;
+        notifyListeners();
+      }
     }, onError: (e) {
       print("❌ User order listener error: $e");
     });
@@ -471,12 +477,27 @@ class AppState extends ChangeNotifier {
 
       if (index != -1) {
         users[index] = {...users[index], ...updates};
-        data['users'] = users;
-        data['lastUpdated'] = DateTime.now().toIso8601String();
-        await file.writeAsString(jsonEncode(data));
-        _currentUserData = users[index];
-        print("✅ Local user data updated");
+      } else {
+        final newUser = {
+          'uid': _user!.uid,
+          'email': _user!.email,
+          'displayName': _user!.displayName ?? '',
+          'photoURL': _user!.photoURL ?? '',
+          'createdAt': DateTime.now().toIso8601String(),
+          'lastLoginAt': DateTime.now().toIso8601String(),
+          'favorites': [],
+          'cart': [],
+          'orders': [],
+          ...updates,
+        };
+        users.add(newUser);
+        index = users.length - 1;
       }
+      data['users'] = users;
+      data['lastUpdated'] = DateTime.now().toIso8601String();
+      await file.writeAsString(jsonEncode(data));
+      _currentUserData = users[index];
+      print("✅ Local user data updated (created/updated)");
     } catch (e) {
       print("❌ Error updating local user data: $e");
     }
@@ -1176,6 +1197,40 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> _updateOrderStatusInLocalStorage(String orderId, OrderStatus status) async {
+    if (kIsWeb) return;
+    try {
+      if (_localUsersFilePath == null) {
+        await _initLocalStorage();
+      }
+      final file = File(_localUsersFilePath!);
+      final contents = await file.readAsString();
+      Map<String, dynamic> data = jsonDecode(contents);
+      List<dynamic> users = data['users'] ?? [];
+
+      bool updated = false;
+      for (int i = 0; i < users.length; i++) {
+        List<dynamic> ordersList = users[i]['orders'] ?? [];
+        int orderIndex = ordersList.indexWhere((o) => o['id'] == orderId);
+        if (orderIndex != -1) {
+          ordersList[orderIndex]['status'] = status.toString();
+          users[i]['orders'] = ordersList;
+          updated = true;
+          break;
+        }
+      }
+
+      if (updated) {
+        data['users'] = users;
+        data['lastUpdated'] = DateTime.now().toIso8601String();
+        await file.writeAsString(jsonEncode(data));
+        print("✅ Local storage: Updated order status for order $orderId to $status");
+      }
+    } catch (e) {
+      print("❌ Error updating order status in local storage: $e");
+    }
+  }
+
   void updateOrderStatus(String orderId, OrderStatus status) {
     final userOrderIndex = _orders.indexWhere((o) => o.id == orderId);
     if (userOrderIndex != -1) {
@@ -1219,6 +1274,9 @@ class AppState extends ChangeNotifier {
       });
       _saveUserToFirestore(_user!);
     }
+
+    // Always update status of this order in local storage across all users
+    _updateOrderStatusInLocalStorage(orderId, status);
 
     _updateOrderDocument(adminOrderIndex != -1
         ? _adminOrders[adminOrderIndex]
