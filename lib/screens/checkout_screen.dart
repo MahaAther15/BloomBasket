@@ -38,6 +38,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final _cityController = TextEditingController();
   final _zipController = TextEditingController();
 
+  // Controllers for payment
+  final _cardNumberController = TextEditingController();
+  final _expiryDateController = TextEditingController();
+  final _cvvController = TextEditingController();
+  final _cardNameController = TextEditingController();
+
   // Live location state
   bool _isLoadingLocation = false;
   String? _detectedAddress;
@@ -50,6 +56,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     _addressController.dispose();
     _cityController.dispose();
     _zipController.dispose();
+    _cardNumberController.dispose();
+    _expiryDateController.dispose();
+    _cvvController.dispose();
+    _cardNameController.dispose();
     super.dispose();
   }
 
@@ -193,6 +203,33 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         const SnackBar(content: Text("Please select delivery date")),
       );
       return false;
+    }
+
+    if (_currentStep == 2) {
+      if (_cardNumberController.text.trim().length != 16) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Please enter a valid 16-digit card number")),
+        );
+        return false;
+      }
+      if (_expiryDateController.text.trim().isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Please enter expiry date")),
+        );
+        return false;
+      }
+      if (_cvvController.text.trim().length < 3) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Please enter a valid CVV")),
+        );
+        return false;
+      }
+      if (_cardNameController.text.trim().isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Please enter name on card")),
+        );
+        return false;
+      }
     }
 
     return true;
@@ -566,21 +603,87 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    TextInputType? keyboardType,
+    int? maxLength,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: _kWhite,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: _kPurple.withOpacity(0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: TextField(
+        controller: controller,
+        keyboardType: keyboardType,
+        maxLength: maxLength,
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: const TextStyle(color: _kTextSub),
+          prefixIcon: Icon(icon, color: _kPurple),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide.none,
+          ),
+          filled: true,
+          fillColor: _kWhite,
+          contentPadding: const EdgeInsets.symmetric(vertical: 16),
+          counterText: '',
+        ),
+        cursorColor: _kPurple,
+        style: const TextStyle(color: _kText),
+      ),
+    );
+  }
+
   Widget _buildPaymentStep(AppState appState, bool isSmallScreen) {
     return Column(
       children: [
-        _PaymentOption(
-          title: 'CREDIT CARD',
-          subtitle: '**** **** **** 4242',
+        _buildTextField(
+          controller: _cardNumberController,
+          label: 'Card Number',
           icon: Icons.credit_card,
-          isSelected: true,
+          keyboardType: TextInputType.number,
+          maxLength: 16,
         ),
         const SizedBox(height: 12),
-        _PaymentOption(
-          title: 'APPLE PAY',
-          subtitle: '**** 9012',
-          icon: Icons.apple,
-          isSelected: false,
+        Row(
+          children: [
+            Expanded(
+              child: _buildTextField(
+                controller: _expiryDateController,
+                label: 'Expiry (MM/YY)',
+                icon: Icons.calendar_today,
+                keyboardType: TextInputType.datetime,
+                maxLength: 5,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildTextField(
+                controller: _cvvController,
+                label: 'CVV',
+                icon: Icons.security,
+                keyboardType: TextInputType.number,
+                maxLength: 4,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        _buildTextField(
+          controller: _cardNameController,
+          label: 'Name on Card',
+          icon: Icons.person_outline,
         ),
         const SizedBox(height: 24),
         Container(
@@ -853,77 +956,3 @@ class _AddressMethodCard extends StatelessWidget {
   }
 }
 
-// ─── Payment Option Widget ───────────────────────────────────────────────────
-class _PaymentOption extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final bool isSelected;
-
-  const _PaymentOption({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.isSelected,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        border: Border.all(
-          color: isSelected ? _kPurple : _kPurple.withOpacity(0.15),
-          width: isSelected ? 2 : 1,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        color: _kWhite,
-        boxShadow: [
-          if (isSelected)
-            BoxShadow(
-              color: _kPurple.withOpacity(0.08),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: _kPurpleSoft,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: _kPurple, size: 22),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13,
-                    color: _kText,
-                  ),
-                ),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: _kTextSub,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (isSelected)
-            const Icon(Icons.check_circle, color: _kPurple, size: 22),
-        ],
-      ),
-    );
-  }
-}
