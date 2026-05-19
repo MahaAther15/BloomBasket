@@ -3,7 +3,9 @@ import 'package:go_router/go_router.dart';
 import 'dart:math';
 import '../app_theme.dart';
 import '../widgets/primary_button.dart';
-
+import 'package:provider/provider.dart';
+import '../providers/app_state.dart';
+import 'package:intl/intl.dart';
 // ─── Shared Palette (Matching Your App) ──────────────────────────────────────
 const _kPurple = Color(0xFF7457A2);
 const _kPurpleLight = Color(0xFF9B7BC8);
@@ -99,6 +101,12 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     final isSmallScreen = screenSize.width < 600;
+    
+    final appState = Provider.of<AppState>(context, listen: false);
+    final latestOrder = appState.orders.isNotEmpty ? appState.orders.first : null;
+    final totalAmount = latestOrder?.totalAmount ?? 0.0;
+    final deliveryDate = DateTime.now().add(const Duration(days: 3));
+    final formattedDate = DateFormat('MMM dd, yyyy').format(deliveryDate).toUpperCase();
 
     return Scaffold(
       backgroundColor: _kBg,
@@ -119,7 +127,7 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
           ),
           // Confetti particles
           if (_confettiAnimation.value > 0)
-            ..._buildConfettiParticles(isSmallScreen),
+            _buildConfettiParticles(isSmallScreen),
           // Main content
           SafeArea(
             child: FadeTransition(
@@ -271,19 +279,19 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
                               children: [
                                 _AnimatedSummaryRow(
                                   label: 'ORDER NUMBER',
-                                  value: '#BB-89012',
+                                  value: latestOrder?.id ?? '#BB-89012',
                                   delay: 0.2,
                                 ),
                                 const SizedBox(height: 12),
                                 _AnimatedSummaryRow(
                                   label: 'ESTIMATED DELIVERY',
-                                  value: 'MAY 28, 2026',
+                                  value: formattedDate,
                                   delay: 0.4,
                                 ),
                                 const SizedBox(height: 12),
                                 _AnimatedSummaryRow(
                                   label: 'TOTAL AMOUNT',
-                                  value: '\$156.00',
+                                  value: '\$${totalAmount.toStringAsFixed(2)}',
                                   delay: 0.6,
                                 ),
                               ],
@@ -346,7 +354,7 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
     );
   }
 
-  List<Widget> _buildConfettiParticles(bool isSmallScreen) {
+  Widget _buildConfettiParticles(bool isSmallScreen) {
     List<Widget> particles = [];
     final colors = [
       _kPurple,
@@ -394,7 +402,13 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
         ),
       );
     }
-    return particles;
+    return Positioned.fill(
+      child: IgnorePointer(
+        child: Stack(
+          children: particles,
+        ),
+      ),
+    );
   }
 
   void _navigateWithAnimation(BuildContext context, String route) {

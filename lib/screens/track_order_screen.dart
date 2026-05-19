@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../app_theme.dart';
+import 'package:provider/provider.dart';
+import '../providers/app_state.dart';
+import 'package:intl/intl.dart';
+import '../models/order.dart';
 
 // ─── Shared Palette (Matching Your App) ──────────────────────────────────────
 const _kPurple = Color(0xFF7457A2);
@@ -87,6 +91,9 @@ class _TrackOrderScreenState extends State<TrackOrderScreen>
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     final isSmallScreen = screenSize.width < 600;
+    
+    final appState = Provider.of<AppState>(context);
+    final latestOrder = appState.orders.isNotEmpty ? appState.orders.first : null;
 
     return Scaffold(
       backgroundColor: _kBg,
@@ -144,7 +151,7 @@ class _TrackOrderScreenState extends State<TrackOrderScreen>
                 ),
                 child: ScaleTransition(
                   scale: _cardAnimation,
-                  child: _buildOrderCard(isSmallScreen),
+                  child: _buildOrderCard(isSmallScreen, latestOrder),
                 ),
               ),
             ),
@@ -179,7 +186,7 @@ class _TrackOrderScreenState extends State<TrackOrderScreen>
             const SizedBox(height: 24),
 
             // Animated Vertical Stepper
-            ..._buildAnimatedStatusSteps(),
+            ..._buildAnimatedStatusSteps(latestOrder),
 
             const SizedBox(height: 48),
 
@@ -210,7 +217,18 @@ class _TrackOrderScreenState extends State<TrackOrderScreen>
     );
   }
 
-  Widget _buildOrderCard(bool isSmallScreen) {
+  Widget _buildOrderCard(bool isSmallScreen, BBOrder? latestOrder) {
+    final orderId = latestOrder?.id ?? 'BB-89012';
+    final address = latestOrder?.deliveryAddress ?? '123 BOTANICAL GARDENS, LONDON, UK';
+    final orderDate = latestOrder?.orderDate ?? DateTime.now();
+    
+    final deliveryDate = latestOrder?.estimatedDeliveryDate;
+    final deliveryEstimateStr = deliveryDate != null
+        ? DateFormat('MMM dd, yyyy').format(deliveryDate)
+        : DateFormat('MMM dd, yyyy').format(orderDate.add(const Duration(days: 3)));
+
+    final priceStr = latestOrder != null ? '\$${latestOrder.totalAmount.toStringAsFixed(0)}' : '\$156';
+
     return Container(
       padding: EdgeInsets.all(isSmallScreen ? 16 : 24),
       decoration: BoxDecoration(
@@ -237,7 +255,7 @@ class _TrackOrderScreenState extends State<TrackOrderScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'ORDER #BB-89012',
+                    'ORDER #$orderId',
                     style: TextStyle(
                       color: _kWhite,
                       letterSpacing: 2,
@@ -246,10 +264,36 @@ class _TrackOrderScreenState extends State<TrackOrderScreen>
                     ),
                   ),
                   const SizedBox(height: 4),
-                  _buildStatusChip(),
+                  _buildStatusChip(latestOrder),
                 ],
               ),
-              _buildAnimatedIcon(),
+              Row(
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        priceStr,
+                        style: TextStyle(
+                          color: _kWhite,
+                          fontSize: isSmallScreen ? 18 : 22,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      Text(
+                        'TOTAL AMOUNT',
+                        style: TextStyle(
+                          color: _kWhite.withOpacity(0.6),
+                          fontSize: isSmallScreen ? 8 : 10,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(width: 12),
+                  _buildAnimatedIcon(),
+                ],
+              ),
             ],
           ),
           const Divider(height: 32, color: Colors.white24),
@@ -270,7 +314,7 @@ class _TrackOrderScreenState extends State<TrackOrderScreen>
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  '123 BOTANICAL GARDENS, LONDON, UK',
+                  address,
                   style: TextStyle(
                     color: _kWhite.withOpacity(0.9),
                     fontSize: isSmallScreen ? 12 : 14,
@@ -295,7 +339,7 @@ class _TrackOrderScreenState extends State<TrackOrderScreen>
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Estimated delivery: 2:30 PM today',
+                  'Delivery Date: $deliveryEstimateStr',
                   style: TextStyle(
                     color: Colors.white70,
                     fontSize: isSmallScreen ? 10 : 12,
@@ -309,7 +353,8 @@ class _TrackOrderScreenState extends State<TrackOrderScreen>
     );
   }
 
-  Widget _buildStatusChip() {
+  Widget _buildStatusChip(BBOrder? latestOrder) {
+    final statusText = latestOrder?.status.displayText ?? 'IN PROGRESS';
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
@@ -324,9 +369,9 @@ class _TrackOrderScreenState extends State<TrackOrderScreen>
             opacity: value,
             child: Transform.scale(
               scale: value,
-              child: const Text(
-                'IN PROGRESS',
-                style: TextStyle(
+              child: Text(
+                statusText,
+                style: const TextStyle(
                   color: _kText,
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
@@ -364,26 +409,46 @@ class _TrackOrderScreenState extends State<TrackOrderScreen>
     );
   }
 
-  List<Widget> _buildAnimatedStatusSteps() {
+  List<Widget> _buildAnimatedStatusSteps(BBOrder? latestOrder) {
+    final status = latestOrder?.status ?? OrderStatus.confirmed;
+    final orderDate = latestOrder?.orderDate ?? DateTime.now();
+    final deliveryDate = latestOrder?.estimatedDeliveryDate;
+
     final steps = [
       {
         'title': 'ORDER CONFIRMED',
-        'time': 'MAY 26, 10:30 AM',
-        'completed': true
+        'time': DateFormat('MMM dd, hh:mm a').format(orderDate).toUpperCase(),
+        'completed': true,
+        'current': status == OrderStatus.confirmed || status == OrderStatus.pending,
       },
       {
         'title': 'PREPARING ARRANGEMENT',
-        'time': 'MAY 26, 11:45 AM',
-        'completed': true,
-        'current': true
+        'time': DateFormat('MMM dd, hh:mm a').format(orderDate.add(const Duration(minutes: 30))).toUpperCase(),
+        'completed': status.index >= OrderStatus.prepared.index && status != OrderStatus.cancelled,
+        'current': status == OrderStatus.prepared,
       },
       {
         'title': 'OUT FOR DELIVERY',
-        'time': 'ESTIMATED 2:00 PM',
-        'completed': false
+        'time': 'ESTIMATED ' + DateFormat('hh:mm a').format(orderDate.add(const Duration(hours: 2))).toUpperCase(),
+        'completed': status.index >= OrderStatus.outForDelivery.index && status != OrderStatus.cancelled,
+        'current': status == OrderStatus.shipped || status == OrderStatus.outForDelivery,
       },
-      {'title': 'DELIVERED', 'time': 'ESTIMATED 2:30 PM', 'completed': false},
+      {
+        'title': 'DELIVERED',
+        'time': 'ESTIMATED ' + (deliveryDate != null
+            ? DateFormat('MMM dd, yyyy').format(deliveryDate).toUpperCase()
+            : DateFormat('hh:mm a').format(orderDate.add(const Duration(hours: 3))).toUpperCase()),
+        'completed': status == OrderStatus.delivered,
+        'current': status == OrderStatus.delivered,
+      },
     ];
+
+    // Ensure status completeness logic flows correctly
+    for (int i = 0; i < steps.length; i++) {
+      if (status.index > i) {
+        steps[i]['completed'] = true;
+      }
+    }
 
     return List.generate(steps.length, (index) {
       return AnimatedStatusStep(

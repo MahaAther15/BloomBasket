@@ -705,7 +705,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 ),
               ),
               Text(
-                '\$${appState.cartTotal.toStringAsFixed(0)}',
+                '\$${appState.cartTotal.toStringAsFixed(2)}',
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w800,
@@ -730,7 +730,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               setState(() => _currentStep++);
             } else {
               final appState = Provider.of<AppState>(context, listen: false);
-              appState.placeOrder(_finalAddress);
+              appState.placeOrder(_finalAddress, deliveryDate: _selectedDate);
               context.go('/confirmation');
             }
           },

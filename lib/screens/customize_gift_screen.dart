@@ -44,6 +44,7 @@ class _CustomizeGiftScreenState extends State<CustomizeGiftScreen>
   ];
 
   final TextEditingController _messageController = TextEditingController();
+  final TextEditingController _instructionsController = TextEditingController();
   int _selectedTabIndex = 0;
 
   final List<String> _flowerOptions = [
@@ -118,6 +119,7 @@ class _CustomizeGiftScreenState extends State<CustomizeGiftScreen>
   void dispose() {
     _tabController.dispose();
     _messageController.dispose();
+    _instructionsController.dispose();
     super.dispose();
   }
 
@@ -959,6 +961,30 @@ class _CustomizeGiftScreenState extends State<CustomizeGiftScreen>
                 ),
               ),
             ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _instructionsController,
+              maxLines: 2,
+              maxLength: 150,
+              style: GoogleFonts.manrope(fontSize: 13, color: _kText, fontWeight: FontWeight.w600),
+              decoration: InputDecoration(
+                hintText: 'ADD SPECIAL CUSTOMIZATION INSTRUCTIONS...',
+                hintStyle: GoogleFonts.manrope(fontSize: 11, color: _kTextSub.withOpacity(0.5)),
+                filled: true,
+                fillColor: _kBg,
+                counterText: '',
+                prefixIcon: const Icon(Icons.edit_note_rounded, color: _kPurple, size: 18),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: const BorderSide(color: _kPurpleSoft, width: 1.5),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: const BorderSide(color: _kPurple, width: 2),
+                ),
+              ),
+            ),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
@@ -1000,7 +1026,11 @@ class _CustomizeGiftScreenState extends State<CustomizeGiftScreen>
                 details += "✉️ Card Design: $_selectedCardDesign\n";
 
                 if (_messageController.text.trim().isNotEmpty) {
-                  details += "💌 Message: \"${_messageController.text.trim()}\"";
+                  details += "💌 Message: \"${_messageController.text.trim()}\"\n";
+                }
+
+                if (_instructionsController.text.trim().isNotEmpty) {
+                  details += "📝 Instructions: \"${_instructionsController.text.trim()}\"\n";
                 }
 
                 final customProduct = Product(

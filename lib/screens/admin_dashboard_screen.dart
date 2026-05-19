@@ -449,7 +449,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           ...appState.adminOrders.take(5).map((order) => _OrderCard(
                 order: order,
                 isMobile: isMobile,
-                onStatusChanged: (s) {},
+                onStatusChanged: (s) => appState.updateOrderStatus(order.id, s),
               )),
       ],
     );
@@ -649,6 +649,42 @@ class _OrderCard extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
+                for (var item in order.items)
+                  if (item.product.description.isNotEmpty &&
+                      (item.product.name.toLowerCase().contains('custom') ||
+                       item.product.category.toLowerCase() == 'bespoke'))
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6.0),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AdminDashboardScreen.primaryPurple.withOpacity(0.05),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: AdminDashboardScreen.primaryPurple.withOpacity(0.1)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${item.product.name} Customization Details:',
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: AdminDashboardScreen.primaryPurple,
+                                  fontSize: 10),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              item.product.description,
+                              style: const TextStyle(
+                                  color: Colors.black87,
+                                  fontSize: 10,
+                                  height: 1.3),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                 if (order.specialInstructions != null &&
                     order.specialInstructions!.isNotEmpty)
                   Padding(
@@ -659,7 +695,7 @@ class _OrderCard extends StatelessWidget {
                           color: AdminDashboardScreen.primaryPurple
                               .withOpacity(0.35),
                           fontSize: 10),
-                      maxLines: 2,
+                      maxLines: 4,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -687,8 +723,14 @@ class _OrderCard extends StatelessWidget {
                   return OrderStatus.values.map((status) {
                     return PopupMenuItem<OrderStatus>(
                       value: status,
-                      child: Text(status.displayText,
-                          style: const TextStyle(fontSize: 12)),
+                      child: Text(
+                        status.displayText,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AdminDashboardScreen.primaryPurple,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     );
                   }).toList();
                 },

@@ -169,6 +169,17 @@ class AppState extends ChangeNotifier {
                   'orderDate': order.orderDate.toIso8601String(),
                   'status': order.status.toString(),
                   'deliveryAddress': order.deliveryAddress,
+                  'customerName': order.customerName,
+                  'estimatedDeliveryDate': order.estimatedDeliveryDate?.toIso8601String(),
+                  'specialInstructions': order.specialInstructions,
+                  'items': order.items.map((item) => {
+                    'productId': item.product.id,
+                    'productName': item.product.name,
+                    'productDescription': item.product.description,
+                    'productPrice': item.product.price,
+                    'productImageUrl': item.product.imageUrl,
+                    'quantity': item.quantity,
+                  }).toList(),
                 })
             .toList(),
       };
@@ -247,13 +258,32 @@ class AppState extends ChangeNotifier {
         // Load orders
         List<dynamic> ordersData = userData['orders'] ?? [];
         _orders = ordersData.map((orderJson) {
+          List<dynamic> itemsData = orderJson['items'] ?? [];
+          List<CartItem> items = itemsData.map((itemJson) {
+            return CartItem(
+              product: Product(
+                id: itemJson['productId'] ?? '',
+                name: itemJson['productName'] ?? '',
+                description: itemJson['productDescription'] ?? '',
+                price: (itemJson['productPrice'] as num?)?.toDouble() ?? 0.0,
+                imageUrl: itemJson['productImageUrl'] ?? '',
+                category: '',
+                tags: [],
+              ),
+            )..quantity = itemJson['quantity'] ?? 1;
+          }).toList();
+
           return BBOrder(
             id: orderJson['id'],
-            items: [], // You might want to store items separately
+            items: items,
             totalAmount: (orderJson['totalAmount'] as num).toDouble(),
             orderDate: DateTime.parse(orderJson['orderDate']),
             status: _parseOrderStatus(orderJson['status']),
             deliveryAddress: orderJson['deliveryAddress'],
+            estimatedDeliveryDate: orderJson['estimatedDeliveryDate'] != null
+                ? DateTime.tryParse(orderJson['estimatedDeliveryDate'])
+                : null,
+            specialInstructions: orderJson['specialInstructions'],
           );
         }).toList();
 
@@ -358,6 +388,14 @@ class AppState extends ChangeNotifier {
         ..quantity = (itemMap['quantity'] as num?)?.toInt() ?? 1;
     }).toList();
 
+    final rawDeliveryDate = data['estimatedDeliveryDate'];
+    DateTime? estimatedDeliveryDate;
+    if (rawDeliveryDate is Timestamp) {
+      estimatedDeliveryDate = rawDeliveryDate.toDate();
+    } else if (rawDeliveryDate is String) {
+      estimatedDeliveryDate = DateTime.tryParse(rawDeliveryDate);
+    }
+
     return BBOrder(
       id: data['id'] ?? '',
       items: items,
@@ -367,6 +405,7 @@ class AppState extends ChangeNotifier {
       deliveryAddress: data['deliveryAddress'] ?? '',
       customerName: data['customerName'],
       specialInstructions: data['specialInstructions'],
+      estimatedDeliveryDate: estimatedDeliveryDate,
     );
   }
 
@@ -382,6 +421,7 @@ class AppState extends ChangeNotifier {
         'orderDate': order.orderDate.toIso8601String(),
         'totalAmount': order.totalAmount,
         'specialInstructions': order.specialInstructions ?? '',
+        'estimatedDeliveryDate': order.estimatedDeliveryDate?.toIso8601String(),
         'items': order.items.map((item) {
           return {
             'productId': item.product.id,
@@ -675,6 +715,13 @@ class AppState extends ChangeNotifier {
                     'orderDate': order.orderDate.toIso8601String(),
                     'status': order.status.toString(),
                     'deliveryAddress': order.deliveryAddress,
+                    'estimatedDeliveryDate': order.estimatedDeliveryDate?.toIso8601String(),
+                    'items': order.items.map((item) => {
+                      'productId': item.product.id,
+                      'productName': item.product.name,
+                      'productPrice': item.product.price,
+                      'quantity': item.quantity,
+                    }).toList(),
                   })
               .toList(),
         });
@@ -702,6 +749,54 @@ class AppState extends ChangeNotifier {
       print("✅ Password reset email sent to: $email");
     } on FirebaseAuthException catch (e) {
       throw Exception(e.message ?? 'Failed to send reset email');
+    }
+  }
+
+  // ✅ Load all local orders for the Admin side (fallback if offline/empty)
+  Future<void> _loadLocalAdminOrders() async {
+    try {
+      final localUsers = await getAllLocalUsers();
+      final List<BBOrder> loadedOrders = [];
+      for (var u in localUsers) {
+        List<dynamic> ordersData = u['orders'] ?? [];
+        for (var orderJson in ordersData) {
+          List<dynamic> itemsData = orderJson['items'] ?? [];
+          List<CartItem> items = itemsData.map((itemJson) {
+            return CartItem(
+              product: Product(
+                id: itemJson['productId'] ?? '',
+                name: itemJson['productName'] ?? '',
+                description: itemJson['productDescription'] ?? '',
+                price: (itemJson['productPrice'] as num?)?.toDouble() ?? 0.0,
+                imageUrl: itemJson['productImageUrl'] ?? '',
+                category: '',
+                tags: [],
+              ),
+            )..quantity = itemJson['quantity'] ?? 1;
+          }).toList();
+
+          loadedOrders.add(BBOrder(
+            id: orderJson['id'],
+            items: items,
+            totalAmount: (orderJson['totalAmount'] as num).toDouble(),
+            orderDate: DateTime.parse(orderJson['orderDate']),
+            status: _parseOrderStatus(orderJson['status']),
+            deliveryAddress: orderJson['deliveryAddress'],
+            customerName: u['displayName'] ?? u['email'] ?? orderJson['customerName'],
+            estimatedDeliveryDate: orderJson['estimatedDeliveryDate'] != null
+                ? DateTime.tryParse(orderJson['estimatedDeliveryDate'])
+                : null,
+            specialInstructions: orderJson['specialInstructions'],
+          ));
+        }
+      }
+      // Sort by orderDate descending
+      loadedOrders.sort((a, b) => b.orderDate.compareTo(a.orderDate));
+      _adminOrders = loadedOrders;
+      notifyListeners();
+      print("✅ Local admin orders loaded: ${_adminOrders.length}");
+    } catch (e) {
+      print("❌ Error loading local admin orders: $e");
     }
   }
 
@@ -1075,6 +1170,9 @@ class AppState extends ChangeNotifier {
 
   void setAdminAuthenticated(bool value) {
     _isAdminAuthenticated = value;
+    if (value) {
+      _loadLocalAdminOrders(); // Load local fallback orders when admin logs in
+    }
     notifyListeners();
   }
 
@@ -1105,6 +1203,17 @@ class AppState extends ChangeNotifier {
                   'orderDate': order.orderDate.toIso8601String(),
                   'status': order.status.toString(),
                   'deliveryAddress': order.deliveryAddress,
+                  'customerName': order.customerName,
+                  'estimatedDeliveryDate': order.estimatedDeliveryDate?.toIso8601String(),
+                  'specialInstructions': order.specialInstructions,
+                  'items': order.items.map((item) => {
+                    'productId': item.product.id,
+                    'productName': item.product.name,
+                    'productDescription': item.product.description,
+                    'productPrice': item.product.price,
+                    'productImageUrl': item.product.imageUrl,
+                    'quantity': item.quantity,
+                  }).toList(),
                 })
             .toList(),
       });
@@ -1232,8 +1341,16 @@ class AppState extends ChangeNotifier {
   }
 
   // ==================== ORDER METHODS ====================
-  void placeOrder(String address) {
+  void placeOrder(String address, {DateTime? deliveryDate}) {
     if (_cart.isEmpty) return;
+
+    final List<String> customNotes = [];
+    for (var item in _cart) {
+      if (item.product.category == 'Bespoke' || item.product.name.toLowerCase().contains('custom')) {
+        customNotes.add(item.product.description);
+      }
+    }
+    final String? aggregatedInstructions = customNotes.isNotEmpty ? customNotes.join('\n\n') : null;
 
     final newOrder = BBOrder(
       id: 'BB-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
@@ -1243,9 +1360,12 @@ class AppState extends ChangeNotifier {
       status: OrderStatus.confirmed,
       deliveryAddress: address,
       customerName: _user?.displayName ?? _user?.email,
+      estimatedDeliveryDate: deliveryDate,
+      specialInstructions: aggregatedInstructions,
     );
 
     _orders.insert(0, newOrder);
+    _adminOrders.insert(0, newOrder); // Keep adminOrders synced in the same session!
 
     // Save orders to local storage and Firestore if user is logged in
     if (_user != null) {
@@ -1258,6 +1378,16 @@ class AppState extends ChangeNotifier {
                   'status': order.status.toString(),
                   'deliveryAddress': order.deliveryAddress,
                   'customerName': order.customerName,
+                  'estimatedDeliveryDate': order.estimatedDeliveryDate?.toIso8601String(),
+                  'specialInstructions': order.specialInstructions,
+                  'items': order.items.map((item) => {
+                    'productId': item.product.id,
+                    'productName': item.product.name,
+                    'productDescription': item.product.description,
+                    'productPrice': item.product.price,
+                    'productImageUrl': item.product.imageUrl,
+                    'quantity': item.quantity,
+                  }).toList(),
                 })
             .toList(),
       });
